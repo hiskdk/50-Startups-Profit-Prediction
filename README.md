@@ -12,8 +12,8 @@
 
 ## 🌐 專案成果與線上演示 (Live Demo)
 
-- 🐙 **GitHub Repository**: **`https://github.com/<您的GitHub帳號>/<您的專案名稱>`**
-- 🔗 **GitHub Pages 預計公開網址**: **`https://<您的GitHub帳號>.github.io/<您的專案名稱>/`**
+- 🐙 **GitHub Repository**: **`https://github.com/hiskdk/50-Startups-Profit-Prediction`**
+- 🔗 **GitHub Pages 公開網址**: **`https://hiskdk.github.io/50-Startups-Profit-Prediction/`**
 - 🎨 **設計風格參考**: 啟發自 [StatsUnlock Multiple Linear Regression Calculator](https://statsunlock.com/multiple-linear-regression-calculator/)，具備專業 SaaS 統計計算機與 APA 報告美學。
 
 ![Dashboard Preview](dashboard_demo.png)
