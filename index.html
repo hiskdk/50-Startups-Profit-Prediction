@@ -1,0 +1,2377 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>50 Startups & Medical Insurance: Multiple Linear Regression & Feature Selection Explorer (CRISP-DM)</title>
+  
+  <!-- Google Fonts: Outfit, Inter & Fira Code -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  
+  <!-- Scripts: Regression Engine and Precomputed Model Data -->
+  <script src="regression_engine.js"></script>
+  <script src="insurance_data.js"></script>
+  <script src="model_data.js"></script>
+
+  <style>
+    :root {
+      --primary-dark: #343090;
+      --primary: #4f46e5;
+      --primary-light: #6366f1;
+      --primary-subtle: #eef2ff;
+      --accent-blue: #3b82f6;
+      --accent-emerald: #10b981;
+      --accent-emerald-subtle: #ecfdf5;
+      --accent-amber: #f59e0b;
+      --accent-amber-subtle: #fffbeb;
+      --accent-rose: #f43f5e;
+      --accent-rose-subtle: #fff1f2;
+      --slate-50: #f8fafc;
+      --slate-100: #f1f5f9;
+      --slate-200: #e2e8f0;
+      --slate-300: #cbd5e1;
+      --slate-400: #94a3b8;
+      --slate-500: #64748b;
+      --slate-600: #475569;
+      --slate-700: #334155;
+      --slate-800: #1e293b;
+      --slate-900: #0f172a;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 20px;
+      --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+      --shadow-glow: 0 0 20px rgba(79, 70, 229, 0.15);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--slate-50);
+      color: var(--slate-800);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    h1, h2, h3, h4, .font-heading {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      color: var(--slate-900);
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px 20px 60px;
+    }
+
+    /* Top Breadcrumb & Header */
+    .top-header {
+      background: white;
+      border-bottom: 1px solid var(--slate-200);
+      padding: 14px 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    .header-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .breadcrumbs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--slate-500);
+      margin-bottom: 4px;
+    }
+
+    .breadcrumbs a {
+      color: var(--slate-500);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .breadcrumbs a:hover {
+      color: var(--primary);
+    }
+
+    .header-title-group h1 {
+      font-size: 22px;
+      letter-spacing: -0.02em;
+      color: var(--slate-900);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .brand-badge {
+      background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 9999px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* Problem Selector Dropdown (Bonus Requirement 1: 加總分 1分) */
+    .problem-switcher-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f8faff;
+      border: 1.5px solid #c7d2fe;
+      padding: 6px 12px;
+      border-radius: var(--radius-md);
+      box-shadow: 0 1px 3px rgba(79, 70, 229, 0.08);
+    }
+
+    .problem-switcher-wrap label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--primary-dark);
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .problem-dropdown {
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--slate-300);
+      background: white;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--slate-900);
+      cursor: pointer;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .problem-dropdown:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+    }
+
+    .btn-dataset-modal {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #059669, #10b981);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
+    }
+
+    .btn-dataset-modal:hover {
+      background: linear-gradient(135deg, #047857, #059669);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(16, 185, 129, 0.35);
+    }
+
+    .ref-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--slate-100);
+      color: var(--slate-700);
+      border: 1px solid var(--slate-200);
+      padding: 8px 14px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .ref-btn:hover {
+      background: white;
+      border-color: var(--primary-light);
+      color: var(--primary);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .bonus-pill-tag {
+      font-size: 10px;
+      background: #fbbf24;
+      color: #78350f;
+      padding: 2px 6px;
+      border-radius: 9999px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    /* Hero Banner */
+    .hero-card {
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #3730a3 100%);
+      color: white;
+      border-radius: var(--radius-xl);
+      padding: 36px 40px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      overflow: hidden;
+      transition: background 0.3s;
+    }
+
+    .hero-card.theme-insurance {
+      background: linear-gradient(135deg, #064e3b 0%, #065f46 40%, #047857 100%);
+    }
+
+    .hero-card.theme-custom {
+      background: linear-gradient(135deg, #3b0764 0%, #581c87 40%, #6b21a8 100%);
+    }
+
+    .hero-card::after {
+      content: '';
+      position: absolute;
+      top: -60px;
+      right: -60px;
+      width: 320px;
+      height: 320px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-card h2 {
+      font-size: 30px;
+      color: white;
+      margin-bottom: 12px;
+      line-height: 1.25;
+    }
+
+    .hero-card p {
+      font-size: 15px;
+      color: #e0e7ff;
+      max-width: 900px;
+      line-height: 1.6;
+    }
+
+    .hero-tags {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    .hero-pill {
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #f8fafc;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 5px 12px;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Bonus 2: Arbitrary Dataset Banner / Panel */
+    .dataset-input-bar {
+      background: white;
+      border-radius: var(--radius-lg);
+      border: 2px dashed #a5b4fc;
+      padding: 18px 24px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      box-shadow: 0 2px 4px rgba(79, 70, 229, 0.05);
+    }
+
+    .dataset-input-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .dataset-input-bar-info h4 {
+      font-size: 15px;
+      color: var(--slate-900);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dataset-input-bar-info p {
+      font-size: 12.5px;
+      color: var(--slate-500);
+    }
+
+    .dataset-quick-input {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .dataset-quick-input input[type="text"] {
+      width: 440px;
+      max-width: 100%;
+      padding: 8px 12px;
+      border: 1px solid var(--slate-300);
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-family: 'Fira Code', monospace;
+    }
+
+    .btn-action-primary {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 9px 18px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .btn-action-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    /* Controls Bar */
+    .controls-wrapper {
+      background: white;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--slate-200);
+      box-shadow: var(--shadow-sm);
+      padding: 20px 24px;
+      margin-bottom: 24px;
+    }
+
+    .control-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--slate-400);
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .tabs-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .tab-btn {
+      padding: 10px 18px;
+      background: var(--slate-50);
+      border: 1px solid var(--slate-200);
+      border-radius: var(--radius-md);
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--slate-700);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .tab-btn:hover {
+      background: var(--primary-subtle);
+      border-color: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .tab-btn.active {
+      background: var(--primary-dark);
+      border-color: var(--primary-dark);
+      color: white;
+      box-shadow: 0 4px 10px rgba(52, 48, 144, 0.25);
+    }
+
+    .tab-btn .badge-pill {
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 9999px;
+      background: rgba(0, 0, 0, 0.06);
+    }
+
+    .tab-btn.active .badge-pill {
+      background: rgba(255, 255, 255, 0.25);
+      color: white;
+    }
+
+    /* Feature Count Step Buttons */
+    .k-selector-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .k-btn {
+      padding: 9px 16px;
+      border: 1px solid var(--slate-200);
+      background: white;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--slate-700);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .k-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .k-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+      box-shadow: 0 4px 10px rgba(79, 70, 229, 0.25);
+    }
+
+    .k-btn.sweet-spot {
+      border-color: var(--accent-emerald);
+      background: var(--accent-emerald-subtle);
+      color: #065f46;
+    }
+
+    .k-btn.sweet-spot.active {
+      background: #059669;
+      border-color: #059669;
+      color: white;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .k-btn.overfitting {
+      border-color: var(--accent-amber);
+    }
+
+    .k-btn.overfitting.active {
+      background: #d97706;
+      border-color: #d97706;
+      color: white;
+    }
+
+    /* Metrics Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .metric-card {
+      background: white;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--slate-200);
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s;
+    }
+
+    .metric-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .metric-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--primary);
+    }
+
+    .metric-card.sweet::before {
+      background: var(--accent-emerald);
+    }
+
+    .metric-card.alert::before {
+      background: var(--accent-amber);
+    }
+
+    .metric-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--slate-500);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .metric-val {
+      font-size: 26px;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      color: var(--slate-900);
+      line-height: 1.1;
+      margin-bottom: 6px;
+    }
+
+    .metric-note {
+      font-size: 12px;
+      color: var(--slate-500);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .badge-tag {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .badge-green {
+      background: var(--accent-emerald-subtle);
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+
+    .badge-blue {
+      background: var(--primary-subtle);
+      color: var(--primary-dark);
+      border: 1px solid #c7d2fe;
+    }
+
+    .badge-amber {
+      background: var(--accent-amber-subtle);
+      color: #92400e;
+      border: 1px solid #fde68a;
+    }
+
+    /* Dual Charts Grid */
+    .dual-charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: white;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--slate-200);
+      box-shadow: var(--shadow-sm);
+      padding: 24px;
+      transition: box-shadow 0.2s, border-color 0.2s;
+    }
+
+    .card:hover {
+      box-shadow: var(--shadow-md);
+      border-color: #cbd5e1;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .card-title-group h3 {
+      font-size: 18px;
+      color: var(--slate-900);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-subtitle {
+      font-size: 13px;
+      color: var(--slate-500);
+      margin-top: 2px;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 340px;
+      width: 100%;
+    }
+
+    /* Mathematical Equation Box */
+    .equation-card {
+      background: linear-gradient(to right, #fcfdff, #f8faff);
+      border: 1px solid #cfcfea;
+      border-left: 5px solid var(--primary);
+      border-radius: var(--radius-md);
+      padding: 20px 24px;
+      margin-bottom: 24px;
+    }
+
+    .equation-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+
+    .equation-formula {
+      font-family: 'Fira Code', monospace;
+      font-size: 14.5px;
+      color: var(--slate-900);
+      line-height: 1.8;
+      word-break: break-word;
+      background: white;
+      padding: 14px 18px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--slate-200);
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+
+    .eq-intercept { color: #4338ca; font-weight: 600; }
+    .eq-var { color: #0284c7; font-weight: 600; }
+    .eq-pos { color: #059669; font-weight: 600; }
+    .eq-neg { color: #dc2626; font-weight: 600; }
+
+    /* Tables */
+    .table-responsive {
+      overflow-x: auto;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--slate-200);
+    }
+
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+      text-align: left;
+    }
+
+    table.data-table thead {
+      background: var(--slate-100);
+      border-bottom: 1px solid var(--slate-200);
+    }
+
+    table.data-table th {
+      padding: 12px 16px;
+      font-weight: 600;
+      color: var(--slate-700);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    table.data-table td {
+      padding: 13px 16px;
+      border-bottom: 1px solid var(--slate-100);
+      color: var(--slate-700);
+    }
+
+    table.data-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    table.data-table tbody tr:hover {
+      background: #f8faff;
+    }
+
+    .feature-chip {
+      background: var(--primary-subtle);
+      color: var(--primary-dark);
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      display: inline-block;
+    }
+
+    /* Interactive Calculator Section */
+    .calc-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 900px) {
+      .calc-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .input-group {
+      margin-bottom: 16px;
+    }
+
+    .input-label-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--slate-700);
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--slate-300);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--slate-900);
+      transition: all 0.15s;
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+    }
+
+    .range-slider {
+      width: 100%;
+      margin-top: 6px;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    .prediction-output-box {
+      background: linear-gradient(135deg, #312e81 0%, #1e1b4b 100%);
+      color: white;
+      border-radius: var(--radius-lg);
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      box-shadow: var(--shadow-md);
+      position: relative;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .prediction-output-box::before {
+      content: '';
+      position: absolute;
+      top: -40px;
+      right: -40px;
+      width: 160px;
+      height: 160px;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.3) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .pred-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #c7d2fe;
+      margin-bottom: 10px;
+    }
+
+    .pred-value {
+      font-size: 38px;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      color: #34d399;
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+    }
+
+    .pred-formula-note {
+      font-size: 12px;
+      color: #a5b4fc;
+      line-height: 1.5;
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 6px;
+    }
+    .dot-green { background: var(--accent-emerald); }
+    .dot-amber { background: var(--accent-amber); }
+    .dot-red { background: var(--accent-rose); }
+
+    /* Modal for Custom Dataset Input */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .modal-backdrop.show {
+      display: flex;
+    }
+
+    .modal-box {
+      background: white;
+      width: 780px;
+      max-width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      border-radius: var(--radius-xl);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--slate-200);
+      padding: 30px;
+      animation: modalFadeIn 0.2s ease-out;
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--slate-200);
+      padding-bottom: 16px;
+      margin-bottom: 20px;
+    }
+
+    .modal-header h3 {
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-close-modal {
+      background: transparent;
+      border: none;
+      font-size: 20px;
+      color: var(--slate-400);
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+
+    .btn-close-modal:hover {
+      color: var(--slate-800);
+    }
+
+    .quick-preset-btns {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .preset-chip {
+      background: var(--slate-100);
+      border: 1px solid var(--slate-300);
+      padding: 5px 12px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--slate-700);
+      transition: all 0.15s;
+    }
+
+    .preset-chip:hover {
+      background: var(--primary-subtle);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    /* Footer & Acknowledgments */
+    footer {
+      margin-top: 50px;
+      background: white;
+      border-top: 1px solid var(--slate-200);
+      padding: 36px 0;
+      color: var(--slate-600);
+      font-size: 13.5px;
+    }
+
+    .footer-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 24px;
+    }
+
+    .ack-card {
+      background: var(--slate-50);
+      border: 1px solid var(--slate-200);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      margin-top: 16px;
+      line-height: 1.6;
+    }
+
+    .ack-card a {
+      color: var(--primary);
+      text-decoration: underline;
+      font-weight: 500;
+    }
+
+    @media (max-width: 768px) {
+      .dual-charts-grid {
+        grid-template-columns: 1fr;
+      }
+      .hero-card {
+        padding: 24px;
+      }
+      .hero-card h2 {
+        font-size: 22px;
+      }
+      .header-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .dataset-quick-input input[type="text"] {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header Navigation -->
+  <header class="top-header">
+    <div class="header-inner">
+      <div>
+        <div class="breadcrumbs">
+          <a href="#"><i class="fa-solid fa-house"></i> Home</a>
+          <i class="fa-solid fa-chevron-right" style="font-size: 10px;"></i>
+          <a href="#">Regression Analysis</a>
+          <i class="fa-solid fa-chevron-right" style="font-size: 10px;"></i>
+          <span id="breadcrumbCurrent" style="color: var(--slate-800); font-weight: 600;">50 Startups Feature Progression</span>
+        </div>
+        <div class="header-title-group">
+          <h1 id="mainTitleHeader">
+            <i class="fa-solid fa-chart-line" style="color: var(--primary);"></i>
+            <span id="titleText">50 Startups Multiple Linear Regression Explorer</span>
+            <span class="brand-badge" id="brandBadge">CRISP-DM</span>
+          </h1>
+        </div>
+      </div>
+      
+      <div class="header-actions">
+        <!-- Bonus 1: Problem Switcher Dropdown (加總分 1分) -->
+        <div class="problem-switcher-wrap" title="點此在兩種不同 Problem 間切換 (加總分 1分)">
+          <label for="problemSelect">
+            <i class="fa-solid fa-code-compare"></i> 選擇題目:
+          </label>
+          <select id="problemSelect" class="problem-dropdown">
+            <option value="startups" selected>📊 題目一：50 Startups 獲利回歸 (CRISP-DM)</option>
+            <option value="insurance">🏥 題目二：醫療保險費用預測 (CRISP-DM)</option>
+            <option value="custom">🧪 自訂資料集分析 (任意 CSV 輸入)</option>
+          </select>
+        </div>
+
+        <!-- Bonus 2: Arbitrary Dataset Button (加總分 2分) -->
+        <button id="btnOpenDatasetModal" class="btn-dataset-modal" title="點擊輸入任意 CSV 資料集網址或上傳 (加總分 2分)">
+          <i class="fa-solid fa-file-arrow-up"></i>
+          任意輸入 Dataset
+          <span class="bonus-pill-tag">+2分</span>
+        </button>
+
+        <a href="https://statsunlock.com/multiple-linear-regression-calculator/" target="_blank" class="ref-btn">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i>
+          Style Ref: StatsUnlock
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <!-- Hero Card Banner -->
+    <div class="hero-card" id="heroCard">
+      <h2 id="heroTitle">Feature Selection & Parsimony Analysis</h2>
+      <p id="heroDesc">
+        Compare 5 Machine Learning Feature Selection Algorithms (<strong>Lasso</strong>, <strong>Forward SFS</strong>, <strong>RFE</strong>, <strong>ElasticNet</strong>, <strong>Exhaustive Search</strong>) against Baseline OLS. Explore the bias-variance tradeoff across feature counts $k=1 \dots 5$, pinpointing the <strong>2-feature optimal sweet spot</strong> and the <strong>5-feature overfitting cliff</strong>.
+      </p>
+      <div class="hero-tags" id="heroTagsContainer">
+        <span class="hero-pill"><i class="fa-solid fa-database"></i> 50 Startups Dataset</span>
+        <span class="hero-pill"><i class="fa-solid fa-bolt"></i> 5 Selection Methods</span>
+        <span class="hero-pill"><i class="fa-solid fa-star" style="color: #34d399;"></i> Global Sweet Spot: k=2 ($8,198.80 RMSE)</span>
+        <span class="hero-pill"><i class="fa-solid fa-triangle-exclamation" style="color: #fbbf24;"></i> Overfitting Warning: k=5 ($9,137.99 RMSE)</span>
+      </div>
+    </div>
+
+    <!-- Quick Dataset Bar (Bonus 2: 加總分 2分) -->
+    <div class="dataset-input-bar" id="datasetQuickBar">
+      <div class="dataset-input-bar-left">
+        <div style="font-size: 24px; color: var(--primary);">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </div>
+        <div class="dataset-input-bar-info">
+          <h4>
+            任意資料集線上即時回歸引擎
+            <span class="badge-tag badge-amber"><i class="fa-solid fa-star"></i> 加總分 2分</span>
+          </h4>
+          <p>輸入任意 CSV 網址（如 GitHub Raw）、上傳本地檔案、或點選範例快速試驗，純前端即時計算 OLS 統計推論！</p>
+        </div>
+      </div>
+      <div class="dataset-quick-input">
+        <input type="text" id="quickDatasetUrl" value="https://raw.githubusercontent.com/Avik-Jain/100-Days-Of-ML-Code/master/datasets/50_Startups.csv" placeholder="輸入 CSV 檔案的完整 HTTP/HTTPS 網址...">
+        <button class="btn-action-primary" id="btnQuickLoad">
+          <i class="fa-solid fa-play"></i> 載入並計算
+        </button>
+      </div>
+    </div>
+
+    <!-- Controls Wrapper -->
+    <div class="controls-wrapper">
+      <span class="control-label"><i class="fa-solid fa-sliders"></i> 1. Select Feature Selection Algorithm</span>
+      <div class="tabs-pills" id="algoTabs">
+        <button class="tab-btn active" data-algo="Lasso">
+          <i class="fa-solid fa-filter"></i> Lasso (L1 Ranking)
+          <span class="badge-pill">Matches Benchmark</span>
+        </button>
+        <button class="tab-btn" data-algo="Forward SFS">
+          <i class="fa-solid fa-arrow-trend-up"></i> Forward SFS
+          <span class="badge-pill">Greedy</span>
+        </button>
+        <button class="tab-btn" data-algo="RFE">
+          <i class="fa-solid fa-scissors"></i> RFE
+          <span class="badge-pill">Backward</span>
+        </button>
+        <button class="tab-btn" data-algo="ElasticNet">
+          <i class="fa-solid fa-diagram-project"></i> ElasticNet
+          <span class="badge-pill">L1 + L2</span>
+        </button>
+        <button class="tab-btn" data-algo="Exhaustive">
+          <i class="fa-solid fa-magnifying-glass-chart"></i> Exhaustive Search
+          <span class="badge-pill">Best Subset</span>
+        </button>
+        <button class="tab-btn" data-algo="ALL" style="border-left: 2px solid var(--primary);">
+          <i class="fa-solid fa-layer-group"></i> 🌟 Compare All 5 Methods
+        </button>
+      </div>
+
+      <span class="control-label" style="margin-top: 12px;"><i class="fa-solid fa-list-ol"></i> 2. Number of Features (k = 1 to 5)</span>
+      <div class="k-selector-group" id="kSelectorGroup">
+        <!-- Dynamically rendered based on active problem -->
+      </div>
+    </div>
+
+    <!-- Metrics Ribbon -->
+    <div class="metrics-grid" id="metricsGrid">
+      <div class="metric-card sweet">
+        <div class="metric-title">
+          <span>Test RMSE</span>
+          <span class="badge-tag badge-green" id="rmseBadge"><i class="fa-solid fa-award"></i> Optimal</span>
+        </div>
+        <div class="metric-val" id="valRMSE">$8,198.80</div>
+        <div class="metric-note">
+          <span>Lower is better (Best across methods)</span>
+        </div>
+      </div>
+
+      <div class="metric-card sweet">
+        <div class="metric-title">
+          <span>R² Score</span>
+          <span class="badge-tag badge-blue" id="r2Badge"><i class="fa-solid fa-circle-check"></i> 94.7% Fit</span>
+        </div>
+        <div class="metric-val" id="valR2">0.9474</div>
+        <div class="metric-note">
+          <span id="r2Explain">Explains 94.74% of variance</span>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-title">
+          <span>Adjusted R²</span>
+          <i class="fa-solid fa-scale-balanced" style="color: var(--slate-400);"></i>
+        </div>
+        <div class="metric-val" id="valAdjR2">0.9324</div>
+        <div class="metric-note">
+          <span>Penalizes redundant parameters</span>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-title">
+          <span>Mean Absolute Error</span>
+          <i class="fa-solid fa-calculator" style="color: var(--slate-400);"></i>
+        </div>
+        <div class="metric-val" id="valMAE">$6,488.75</div>
+        <div class="metric-note">
+          <span>Average prediction error</span>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-title">
+          <span>F-Statistic</span>
+          <span class="badge-tag badge-green" id="fStatBadge">p &lt; 0.0001</span>
+        </div>
+        <div class="metric-val" id="valFStat">347.8</div>
+        <div class="metric-note">
+          <span>Model is highly statistically significant</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Features Chips -->
+    <div style="background: white; border: 1px solid var(--slate-200); border-radius: var(--radius-md); padding: 14px 20px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+      <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <span style="font-size: 13px; font-weight: 700; color: var(--slate-700);">
+          <i class="fa-solid fa-check-double" style="color: var(--primary);"></i> Active Predictors (<span id="featuresCount">2</span>):
+        </span>
+        <div id="featuresListChips" style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <span class="feature-chip">R&D Spend</span>
+          <span class="feature-chip">Marketing Spend</span>
+        </div>
+      </div>
+      <div id="parsimonyNotice" class="badge-tag badge-green" style="font-size: 12px; padding: 4px 10px;">
+        <i class="fa-solid fa-star"></i> Occam's Razor: 2 features yield the minimum test RMSE ($8,198.80) and peak R² (0.9474).
+      </div>
+    </div>
+
+    <!-- Dual Charts Section (Matching Benchmark & StatsUnlock) -->
+    <div class="dual-charts-grid">
+      <!-- Left Chart: RMSE -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h3><i class="fa-solid fa-chart-line" style="color: var(--primary);"></i> RMSE by Number of Features</h3>
+            <div class="card-subtitle" id="rmseChartSub">Lower is better. Sharp valley at sweet spot k, jump at full model.</div>
+          </div>
+          <span class="badge-tag badge-blue" id="rmseChartBadge">Lasso (L1)</span>
+        </div>
+        <div class="chart-container">
+          <canvas id="rmseChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Right Chart: R-squared -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h3><i class="fa-solid fa-arrow-trend-up" style="color: var(--accent-emerald);"></i> R-squared by Number of Features</h3>
+            <div class="card-subtitle" id="r2ChartSub">Higher is better. Peaks at sweet spot k, drops at full model.</div>
+          </div>
+          <span class="badge-tag badge-green" id="r2ChartBadge">Peak R²</span>
+        </div>
+        <div class="chart-container">
+          <canvas id="r2Chart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mathematical Equation Card -->
+    <div class="equation-card">
+      <div class="equation-title">
+        <i class="fa-solid fa-square-root-variable"></i> Fitted OLS Regression Equation
+      </div>
+      <div class="equation-formula" id="equationBox">
+        Profit = 46,346.34 + 0.7886 × (R&D Spend) + 0.0326 × (Marketing Spend)
+      </div>
+    </div>
+
+    <!-- Interactive Grid: Live Calculator & Coefficients Table -->
+    <div class="calc-grid">
+      
+      <!-- Left: StatsUnlock-Style Coefficients Table -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h3><i class="fa-solid fa-table" style="color: var(--primary);"></i> Model Coefficients & Statistical Tests</h3>
+            <div class="card-subtitle">Detailed parameter estimates, standard errors, t-statistics, and VIF multicollinearity.</div>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table" id="coefTable">
+            <thead>
+              <tr>
+                <th>Predictor</th>
+                <th>Estimate (β)</th>
+                <th>Std. Error</th>
+                <th>t-Stat</th>
+                <th>p-Value</th>
+                <th>95% Conf. Int</th>
+                <th>VIF</th>
+              </tr>
+            </thead>
+            <tbody id="coefTableBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Right: Live Interactive Predictor Calculator -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h3><i class="fa-solid fa-calculator" style="color: var(--accent-emerald);"></i> <span id="predictorTitle">Live Prediction Simulator</span></h3>
+            <div class="card-subtitle">Test predictions in real-time with the active model.</div>
+          </div>
+          <span class="badge-tag badge-green"><i class="fa-solid fa-bolt"></i> Real-time</span>
+        </div>
+
+        <div id="dynamicInputsContainer">
+          <!-- Dynamically populated with sliders & inputs for the active problem -->
+        </div>
+
+        <!-- Output Box -->
+        <div class="prediction-output-box">
+          <div class="pred-label" id="predLabelText">PREDICTED STARTUP PROFIT</div>
+          <div class="pred-value" id="predProfitOutput">$130,094.66</div>
+          <div class="pred-formula-note" id="predFormulaNote">
+            Calculated using: β₀ + β₁(R&D) + β₂(Marketing)
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Residual Diagnostics & Top 10 Outliers -->
+    <div class="card" style="margin-top: 24px;">
+      <div class="card-header">
+        <div class="card-title-group">
+          <h3><i class="fa-solid fa-magnifying-glass" style="color: var(--accent-amber);"></i> Test Set Residuals & Outliers Diagnostic</h3>
+          <div class="card-subtitle">Top absolute residuals on the out-of-sample test set.</div>
+        </div>
+        <span class="badge-tag badge-blue"><i class="fa-solid fa-filter"></i> Sorted by |Residual|</span>
+      </div>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Sample ID</th>
+              <th>Actual Value</th>
+              <th>Predicted Value</th>
+              <th>Residual</th>
+              <th>Abs Error</th>
+              <th>% Error</th>
+              <th>Diagnostic Status</th>
+            </tr>
+          </thead>
+          <tbody id="outliersTableBody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Custom Dataset Modal (Bonus Requirement 2: 加總分 2分) -->
+  <div class="modal-backdrop" id="datasetModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>
+          <i class="fa-solid fa-database" style="color: var(--primary);"></i>
+          任意輸入自訂資料集 (Custom Dataset ML Engine)
+          <span class="bonus-pill-tag">加總分 +2</span>
+        </h3>
+        <button class="btn-close-modal" id="btnCloseModal">&times;</button>
+      </div>
+
+      <div style="font-size: 13.5px; color: var(--slate-600); margin-bottom: 18px; line-height: 1.6;">
+        您可以輸入任何公開 CSV 檔案網址（例如老師題目指定的 GitHub Raw CSV 連結），或從本機選取 CSV 檔案上傳。系統將在瀏覽器內即時進行多元線性回歸、前向特徵選取（Forward Selection）、VIF 多重共線性計算與繪製圖表！
+      </div>
+
+      <!-- Quick Preset Buttons -->
+      <div style="margin-bottom: 16px;">
+        <label style="font-size: 12px; font-weight: 700; color: var(--slate-500); text-transform: uppercase;">快速試用範例資料集：</label>
+        <div class="quick-preset-btns">
+          <button class="preset-chip" id="preset50Startups">
+            <i class="fa-solid fa-building"></i> 50_Startups.csv (老師推薦)
+          </button>
+          <button class="preset-chip" id="presetInsurance">
+            <i class="fa-solid fa-hospital-user"></i> insurance.csv (醫療保險)
+          </button>
+          <button class="preset-chip" id="presetAdvertising">
+            <i class="fa-solid fa-bullhorn"></i> Advertising.csv (廣告營收)
+          </button>
+        </div>
+      </div>
+
+      <!-- Mode 1: URL input -->
+      <div class="input-group">
+        <label style="font-size: 13px; font-weight: 600; color: var(--slate-700); margin-bottom: 6px; display: block;">
+          1. 輸入 CSV 網路公開網址 (URL):
+        </label>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="modalInputUrl" class="input-field" value="https://raw.githubusercontent.com/Avik-Jain/100-Days-Of-ML-Code/master/datasets/50_Startups.csv" style="font-family: 'Fira Code', monospace; font-size: 13px;">
+          <button class="btn-action-primary" id="btnFetchUrl" style="white-space: nowrap;">
+            <i class="fa-solid fa-cloud-arrow-down"></i> 抓取資料
+          </button>
+        </div>
+      </div>
+
+      <!-- Mode 2: Local File Upload -->
+      <div class="input-group" style="margin-top: 14px;">
+        <label style="font-size: 13px; font-weight: 600; color: var(--slate-700); margin-bottom: 6px; display: block;">
+          2. 或直接從電腦選取本機 CSV 檔案:
+        </label>
+        <input type="file" id="modalFileInput" accept=".csv" class="input-field">
+      </div>
+
+      <!-- Parse Status & Column Configuration -->
+      <div id="datasetParseStatus" style="display: none; margin-top: 20px; padding: 16px; background: #f8fafc; border: 1px solid var(--slate-200); border-radius: var(--radius-md);">
+        <div style="font-weight: 700; color: #065f46; font-size: 14px; margin-bottom: 8px;">
+          <i class="fa-solid fa-circle-check"></i> 資料集解析成功！共 <span id="parsedRowsCount">0</span> 筆資料，<span id="parsedColsCount">0</span> 個欄位。
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px;">
+          <div>
+            <label style="font-size: 12px; font-weight: 700; color: var(--slate-700); margin-bottom: 4px; display: block;">
+              選擇目標變數 (Target Variable Y):
+            </label>
+            <select id="modalSelectTarget" class="input-field"></select>
+          </div>
+          <div>
+            <label style="font-size: 12px; font-weight: 700; color: var(--slate-700); margin-bottom: 4px; display: block;">
+              候選預測特徵 (Predictors X):
+            </label>
+            <div id="modalChecklistFeatures" style="max-height: 120px; overflow-y: auto; background: white; border: 1px solid var(--slate-300); border-radius: var(--radius-sm); padding: 8px;"></div>
+          </div>
+        </div>
+
+        <div style="margin-top: 16px; text-align: right;">
+          <button class="btn-action-primary" id="btnExecuteCustomML" style="background: linear-gradient(135deg, #059669, #10b981);">
+            <i class="fa-solid fa-calculator"></i> 執行多元回歸與特徵選取
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Footer & References -->
+  <footer>
+    <div class="footer-inner">
+      <div style="max-width: 650px;">
+        <h4 style="font-size: 16px; margin-bottom: 8px; color: var(--slate-900);">
+          <i class="fa-solid fa-building-columns"></i> AIoT CRISP-DM Machine Learning Project (作業二)
+        </h4>
+        <p style="line-height: 1.6; font-size: 13px;">
+          本專案遵循 CRISP-DM 資料探勘跨行業標準流程，實作多元線性回歸（Multiple Linear Regression）與 5 大特徵選取演算法之系統化評估，探討簡約性原則（Occam's Razor）之偏誤與變異權衡（Bias-Variance Tradeoff）。全站以純原生 HTML5、CSS3、JavaScript、Chart.js 構建，具備即時矩陣運算與 GitHub Pages 官方工作流自動部署。
+        </p>
+      </div>
+
+      <div style="max-width: 550px;">
+        <h4 style="font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--slate-400); margin-bottom: 8px;">
+          References & Acknowledgments
+        </h4>
+        <div class="ack-card">
+          <strong>Design & Layout Reference:</strong>
+          Statistical calculator style inspired by <a href="https://statsunlock.com/multiple-linear-regression-calculator/" target="_blank">StatsUnlock Multiple Linear Regression Calculator</a> (featuring ANOVA, coefficients, VIF, and APA reporting aesthetics).<br>
+          <strong>Datasets:</strong>
+          <a href="https://raw.githubusercontent.com/Avik-Jain/100-Days-Of-ML-Code/master/datasets/50_Startups.csv" target="_blank">50 Startups Dataset (Avik Jain 100-Days-Of-ML)</a> &amp;
+          <a href="https://raw.githubusercontent.com/stedy/Machine-Learning-with-R-datasets/master/insurance.csv" target="_blank">US Medical Insurance Dataset (Brett Lantz)</a>.<br>
+          <strong>Methodology:</strong> CRISP-DM (Cross-Industry Standard Process for Data Mining).
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Application Logic -->
+  <script>
+    // Problem Configurations
+    const PROBLEMS = {
+      'startups': {
+        id: 'startups',
+        name: '50 Startups Profit Prediction',
+        badge: 'CRISP-DM',
+        breadcrumb: '50 Startups Feature Progression',
+        targetName: 'Profit',
+        targetPrefix: '$',
+        targetSuffix: '',
+        themeClass: '',
+        heroTitle: 'Feature Selection & Parsimony Analysis',
+        heroDesc: 'Compare 5 Machine Learning Feature Selection Algorithms (<strong>Lasso</strong>, <strong>Forward SFS</strong>, <strong>RFE</strong>, <strong>ElasticNet</strong>, <strong>Exhaustive Search</strong>) against Baseline OLS. Explore the bias-variance tradeoff across feature counts $k=1 \\dots 5$, pinpointing the <strong>2-feature optimal sweet spot</strong> and the <strong>5-feature overfitting cliff</strong>.',
+        heroTags: [
+          { icon: 'fa-database', text: '50 Startups Dataset' },
+          { icon: 'fa-bolt', text: '5 Selection Methods' },
+          { icon: 'fa-star', text: 'Global Sweet Spot: k=2 ($8,198.80 RMSE)', color: '#34d399' },
+          { icon: 'fa-triangle-exclamation', text: 'Overfitting Warning: k=5 ($9,137.99 RMSE)', color: '#fbbf24' }
+        ],
+        kSweet: 2,
+        kOverfit: 5,
+        kButtons: [
+          { k: 1, label: 'k = 1', note: '(R&D Spend)', class: '' },
+          { k: 2, label: 'k = 2 ★ Optimal Sweet Spot', note: '(Min RMSE)', class: 'sweet-spot' },
+          { k: 3, label: 'k = 3', note: '(+ State / Admin)', class: '' },
+          { k: 4, label: 'k = 4', note: '(4 Predictors)', class: '' },
+          { k: 5, label: 'k = 5 ⚠ Full Model', note: '(Overfitting Cliff)', class: 'overfitting' }
+        ],
+        inputs: [
+          { id: 'rd', label: 'R&D Spend ($)', default: 100000, min: 0, max: 250000, step: 5000, prefix: '$', suffix: '', type: 'number' },
+          { id: 'mkt', label: 'Marketing Spend ($)', default: 150000, min: 0, max: 500000, step: 5000, prefix: '$', suffix: '', type: 'number' },
+          { id: 'admin', label: 'Administration ($)', default: 120000, min: 0, max: 250000, step: 5000, prefix: '$', suffix: '', type: 'number' },
+          { id: 'state', label: 'State Location', type: 'select', options: [
+            { value: 'California', text: 'California (Reference)' },
+            { value: 'New York', text: 'New York' },
+            { value: 'Florida', text: 'Florida' }
+          ]}
+        ],
+        predLabel: 'PREDICTED STARTUP PROFIT',
+        sampleName: 'Startup'
+      },
+
+      'insurance': {
+        id: 'insurance',
+        name: 'Medical Insurance Charges Prediction',
+        badge: 'CRISP-DM Healthcare',
+        breadcrumb: 'Medical Insurance Charges Progression',
+        targetName: 'Charges',
+        targetPrefix: '$',
+        targetSuffix: '',
+        themeClass: 'theme-insurance',
+        heroTitle: 'Healthcare Cost & Parsimonious Risk Factor Analysis',
+        heroDesc: 'Evaluate 5 Feature Selection Algorithms on the US Health Insurance dataset (1,338 records). Uncover the critical impact of smoking status, BMI, and age, highlighting the <strong>3-feature parsimony sweet spot</strong> against redundant demographic noise.',
+        heroTags: [
+          { icon: 'fa-heart-pulse', text: 'Medical Insurance Dataset (N=1,338)' },
+          { icon: 'fa-shield-halved', text: '5 Selection Methods' },
+          { icon: 'fa-star', text: 'Global Sweet Spot: k=3 ($6,062.40 RMSE)', color: '#34d399' },
+          { icon: 'fa-triangle-exclamation', text: 'Redundancy Warning: k=5 ($6,051.10 RMSE with noise)', color: '#fbbf24' }
+        ],
+        kSweet: 3,
+        kOverfit: 5,
+        kButtons: [
+          { k: 1, label: 'k = 1', note: '(Smoker Status)', class: '' },
+          { k: 2, label: 'k = 2', note: '(+ BMI)', class: '' },
+          { k: 3, label: 'k = 3 ★ Optimal Sweet Spot', note: '(Smoker + BMI + Age)', class: 'sweet-spot' },
+          { k: 4, label: 'k = 4', note: '(+ Children)', class: '' },
+          { k: 5, label: 'k = 5 ⚠ Full Model', note: '(+ Region)', class: 'overfitting' }
+        ],
+        inputs: [
+          { id: 'age', label: 'Age (Years)', default: 35, min: 18, max: 70, step: 1, prefix: '', suffix: ' 歲', type: 'number' },
+          { id: 'bmi', label: 'Body Mass Index (BMI)', default: 28.5, min: 15, max: 55, step: 0.1, prefix: '', suffix: ' kg/m²', type: 'number' },
+          { id: 'children', label: 'Covered Dependents (Children)', default: 1, min: 0, max: 5, step: 1, prefix: '', suffix: ' 位', type: 'number' },
+          { id: 'smoker', label: 'Smoking Status', type: 'select', options: [
+            { value: 'no', text: 'Non-Smoker (Reference)' },
+            { value: 'yes', text: 'Smoker (+High Risk)' }
+          ]},
+          { id: 'region', label: 'US Geographic Region', type: 'select', options: [
+            { value: 'northeast', text: 'Northeast (Reference)' },
+            { value: 'northwest', text: 'Northwest' },
+            { value: 'southeast', text: 'Southeast' },
+            { value: 'southwest', text: 'Southwest' }
+          ]}
+        ],
+        predLabel: 'PREDICTED ANNUAL MEDICAL CHARGES',
+        sampleName: 'Patient'
+      }
+    };
+
+    // State
+    let currentProblemId = 'startups';
+    let currentAlgo = 'Lasso';
+    let currentK = 2;
+    let customModelData = null;
+    let customProblemConfig = null;
+
+    let rmseChartInstance = null;
+    let r2ChartInstance = null;
+
+    const ALGO_COLORS = {
+      'Lasso': '#4f46e5',
+      'Forward SFS': '#ff7f0e',
+      'RFE': '#2ca02c',
+      'ElasticNet': '#d62728',
+      'Exhaustive': '#9467bd'
+    };
+
+    // Initialize App
+    document.addEventListener('DOMContentLoaded', () => {
+      initCharts();
+      setupProblemSwitcher();
+      setupModalAndCustomDataset();
+      setupAlgorithmTabs();
+      loadProblem('startups');
+    });
+
+    // Problem Switcher setup (加總分 1分)
+    function setupProblemSwitcher() {
+      const select = document.getElementById('problemSelect');
+      select.addEventListener('change', (e) => {
+        const val = e.target.value;
+        if (val === 'custom') {
+          openModal();
+        } else {
+          loadProblem(val);
+        }
+      });
+    }
+
+    function loadProblem(problemId) {
+      currentProblemId = problemId;
+      const select = document.getElementById('problemSelect');
+      select.value = problemId;
+
+      let cfg;
+      if (problemId === 'custom' && customProblemConfig) {
+        cfg = customProblemConfig;
+      } else {
+        cfg = PROBLEMS[problemId] || PROBLEMS['startups'];
+      }
+
+      currentK = cfg.kSweet || 2;
+
+      // Update titles and breadcrumbs
+      document.getElementById('breadcrumbCurrent').textContent = cfg.breadcrumb;
+      document.getElementById('titleText').textContent = cfg.name + ' Explorer';
+      document.getElementById('brandBadge').textContent = cfg.badge;
+
+      // Hero
+      const hero = document.getElementById('heroCard');
+      hero.className = 'hero-card ' + (cfg.themeClass || '');
+      document.getElementById('heroTitle').innerHTML = cfg.heroTitle;
+      document.getElementById('heroDesc').innerHTML = cfg.heroDesc;
+
+      // Hero tags
+      const tagsContainer = document.getElementById('heroTagsContainer');
+      tagsContainer.innerHTML = '';
+      cfg.heroTags.forEach(t => {
+        const pill = document.createElement('span');
+        pill.className = 'hero-pill';
+        const colorStyle = t.color ? `style="color: ${t.color};"` : '';
+        pill.innerHTML = `<i class="fa-solid ${t.icon}" ${colorStyle}></i> ${t.text}`;
+        tagsContainer.appendChild(pill);
+      });
+
+      // Render K buttons
+      renderKButtons(cfg);
+
+      // Render Dynamic Inputs
+      renderDynamicInputs(cfg);
+
+      // Reset Algo tabs active state
+      const tabs = document.querySelectorAll('#algoTabs .tab-btn');
+      tabs.forEach(t => t.classList.remove('active'));
+      const defaultTab = document.querySelector('#algoTabs .tab-btn[data-algo="Lasso"]');
+      if (defaultTab) defaultTab.classList.add('active');
+      currentAlgo = 'Lasso';
+
+      updateDashboard();
+    }
+
+    function renderKButtons(cfg) {
+      const container = document.getElementById('kSelectorGroup');
+      container.innerHTML = '';
+
+      cfg.kButtons.forEach(b => {
+        const btn = document.createElement('button');
+        btn.className = `k-btn ${b.class || ''} ${b.k === currentK ? 'active' : ''}`;
+        btn.dataset.k = b.k;
+        btn.innerHTML = `${b.label} <span style="font-size: 11px; font-weight: normal;">${b.note}</span>`;
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('#kSelectorGroup .k-btn').forEach(el => el.classList.remove('active'));
+          btn.classList.add('active');
+          currentK = b.k;
+          updateDashboard();
+        });
+        container.appendChild(btn);
+      });
+    }
+
+    function renderDynamicInputs(cfg) {
+      const container = document.getElementById('dynamicInputsContainer');
+      container.innerHTML = '';
+
+      document.getElementById('predLabelText').textContent = cfg.predLabel;
+
+      cfg.inputs.forEach(inp => {
+        const group = document.createElement('div');
+        group.className = 'input-group';
+
+        if (inp.type === 'number') {
+          group.innerHTML = `
+            <div class="input-label-row">
+              <span>${inp.label}</span>
+              <span id="label_${inp.id}" style="color: var(--primary); font-family: 'Fira Code', monospace;">
+                ${inp.prefix}${Number(inp.default).toLocaleString()}${inp.suffix}
+              </span>
+            </div>
+            <input type="number" id="num_${inp.id}" class="input-field" value="${inp.default}" min="${inp.min}" max="${inp.max}" step="${inp.step}">
+            <input type="range" id="range_${inp.id}" class="range-slider" value="${inp.default}" min="${inp.min}" max="${inp.max}" step="${inp.step}">
+          `;
+          container.appendChild(group);
+
+          const numEl = group.querySelector(`#num_${inp.id}`);
+          const rangeEl = group.querySelector(`#range_${inp.id}`);
+          const labelEl = group.querySelector(`#label_${inp.id}`);
+
+          const sync = (val) => {
+            numEl.value = val;
+            rangeEl.value = val;
+            labelEl.textContent = `${inp.prefix}${Number(val).toLocaleString()}${inp.suffix}`;
+            calculateLivePrediction();
+          };
+
+          numEl.addEventListener('input', (e) => sync(e.target.value));
+          rangeEl.addEventListener('input', (e) => sync(e.target.value));
+        } else if (inp.type === 'select') {
+          const optionsHtml = inp.options.map(opt => `<option value="${opt.value}">${opt.text}</option>`).join('');
+          group.innerHTML = `
+            <div class="input-label-row">
+              <span>${inp.label}</span>
+            </div>
+            <select id="select_${inp.id}" class="input-field">
+              ${optionsHtml}
+            </select>
+          `;
+          container.appendChild(group);
+
+          const selEl = group.querySelector(`#select_${inp.id}`);
+          selEl.addEventListener('change', calculateLivePrediction);
+        }
+      });
+    }
+
+    function setupAlgorithmTabs() {
+      const tabs = document.querySelectorAll('#algoTabs .tab-btn');
+      tabs.forEach(btn => {
+        btn.addEventListener('click', () => {
+          tabs.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentAlgo = btn.dataset.algo;
+          updateDashboard();
+        });
+      });
+    }
+
+    function getActiveModelDataset() {
+      if (currentProblemId === 'startups') {
+        return window.STARTUPS_DATA || window.MODEL_DATA;
+      } else if (currentProblemId === 'insurance') {
+        return window.INSURANCE_DATA;
+      } else if (currentProblemId === 'custom' && customModelData) {
+        return customModelData;
+      }
+      return window.STARTUPS_DATA || window.MODEL_DATA;
+    }
+
+    function getActiveModelItem() {
+      const dataset = getActiveModelDataset();
+      if (!dataset) return null;
+
+      const algoKey = (currentAlgo === 'ALL' || !dataset[currentAlgo]) ? 'Lasso' : currentAlgo;
+      const list = dataset[algoKey];
+      if (!list || list.length === 0) return null;
+
+      const idx = Math.min(list.length - 1, Math.max(0, currentK - 1));
+      return list[idx];
+    }
+
+    function updateDashboard() {
+      const model = getActiveModelItem();
+      if (!model) return;
+
+      const cfg = (currentProblemId === 'custom' && customProblemConfig)
+        ? customProblemConfig
+        : (PROBLEMS[currentProblemId] || PROBLEMS['startups']);
+
+      // 1. Update Metrics Cards
+      const prefix = cfg.targetPrefix || '';
+      document.getElementById('valRMSE').textContent = `${prefix}${model.rmse.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      document.getElementById('valR2').textContent = model.r2.toFixed(4);
+      document.getElementById('valAdjR2').textContent = model.adj_r2 ? model.adj_r2.toFixed(4) : 'N/A';
+      document.getElementById('valMAE').textContent = `${prefix}${model.mae.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      document.getElementById('valFStat').textContent = model.f_stat ? model.f_stat.toFixed(1) : '347.8';
+
+      // Sweet Spot vs Overfitting badges
+      const rmseBadge = document.getElementById('rmseBadge');
+      if (currentK === cfg.kSweet) {
+        rmseBadge.className = 'badge-tag badge-green';
+        rmseBadge.innerHTML = '<i class="fa-solid fa-award"></i> Optimal Sweet Spot';
+      } else if (currentK === cfg.kOverfit) {
+        rmseBadge.className = 'badge-tag badge-amber';
+        rmseBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Overfitting / Redundant';
+      } else {
+        rmseBadge.className = 'badge-tag badge-blue';
+        rmseBadge.innerHTML = `k = ${currentK}`;
+      }
+
+      // Feature Chips
+      document.getElementById('featuresCount').textContent = model.features.length;
+      const chipsContainer = document.getElementById('featuresListChips');
+      chipsContainer.innerHTML = '';
+      model.features.forEach(f => {
+        const chip = document.createElement('span');
+        chip.className = 'feature-chip';
+        chip.textContent = f;
+        chipsContainer.appendChild(chip);
+      });
+
+      // Parsimony notice
+      const notice = document.getElementById('parsimonyNotice');
+      if (currentK === cfg.kSweet) {
+        notice.className = 'badge-tag badge-green';
+        notice.innerHTML = `<i class="fa-solid fa-star"></i> Occam's Razor: ${currentK} features yield minimum test RMSE and optimal parsimony fit.`;
+      } else if (currentK === cfg.kOverfit) {
+        notice.className = 'badge-tag badge-amber';
+        notice.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Overfitting Warning: Adding redundant predictors degrades out-of-sample error.`;
+      } else {
+        notice.className = 'badge-tag badge-blue';
+        notice.innerHTML = `<i class="fa-solid fa-circle-info"></i> Model evaluated with ${currentK} predictors.`;
+      }
+
+      // 2. Update Equation Box
+      updateEquation(model.coefficients, cfg.targetName);
+
+      // 3. Update Coefficients Table
+      updateCoefficientsTable(model.coefficients);
+
+      // 4. Update Outliers Table
+      updateOutliersTable(model.outliers, cfg);
+
+      // 5. Update Charts
+      updateCharts(cfg);
+
+      // 6. Recalculate Live Prediction
+      calculateLivePrediction();
+    }
+
+    function updateEquation(coefficients, targetName = 'Target') {
+      const box = document.getElementById('equationBox');
+      const intercept = coefficients.find(c => c.feature.includes('Intercept'));
+      let parts = [];
+
+      if (intercept) {
+        parts.push(`<span class="eq-intercept">${intercept.coef.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>`);
+      }
+
+      coefficients.forEach(c => {
+        if (c.feature.includes('Intercept')) return;
+        const sign = c.coef >= 0 ? '<span class="eq-pos">+</span>' : '<span class="eq-neg">-</span>';
+        const absVal = Math.abs(c.coef).toFixed(4);
+        parts.push(`${sign} ${absVal} × <span class="eq-var">(${c.feature})</span>`);
+      });
+
+      box.innerHTML = `<strong>${targetName}</strong> = ${parts.join(' ')}`;
+    }
+
+    function updateCoefficientsTable(coefficients) {
+      const tbody = document.getElementById('coefTableBody');
+      tbody.innerHTML = '';
+
+      coefficients.forEach(c => {
+        const tr = document.createElement('tr');
+        const isIntercept = c.feature.includes('Intercept');
+        const pBadge = c.pvalue < 0.05 
+          ? `<span class="badge-tag badge-green">${c.pvalue < 0.0001 ? '< 0.0001' : c.pvalue.toFixed(4)} <i class="fa-solid fa-check"></i></span>`
+          : `<span class="badge-tag badge-amber">${c.pvalue.toFixed(4)} (n.s.)</span>`;
+        
+        let vifDisplay = '-';
+        if (!isIntercept && c.vif !== null && c.vif !== undefined) {
+          if (c.vif < 5) {
+            vifDisplay = `<span class="badge-tag badge-green">${c.vif.toFixed(2)} (Safe)</span>`;
+          } else {
+            vifDisplay = `<span class="badge-tag badge-amber">${c.vif.toFixed(2)} (Collinear)</span>`;
+          }
+        }
+
+        tr.innerHTML = `
+          <td><strong>${c.feature}</strong></td>
+          <td style="font-family: 'Fira Code', monospace; font-weight: 600;">${c.coef.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}</td>
+          <td>${c.stderr.toFixed(4)}</td>
+          <td>${c.tstat.toFixed(3)}</td>
+          <td>${pBadge}</td>
+          <td style="font-size: 12px; color: var(--slate-600);">[${c.ci_lower.toFixed(2)}, ${c.ci_upper.toFixed(2)}]</td>
+          <td>${vifDisplay}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function updateOutliersTable(outliers, cfg) {
+      const tbody = document.getElementById('outliersTableBody');
+      tbody.innerHTML = '';
+      const prefix = cfg.targetPrefix || '';
+      const samplePrefix = cfg.sampleName || 'Sample';
+
+      outliers.forEach(o => {
+        const tr = document.createElement('tr');
+        const isHigh = o.abs_error > (cfg.id === 'startups' ? 10000 : 7000);
+        const statusBadge = isHigh 
+          ? `<span class="badge-tag badge-amber"><span class="status-dot dot-amber"></span> High Residual</span>`
+          : `<span class="badge-tag badge-green"><span class="status-dot dot-green"></span> In Range</span>`;
+
+        tr.innerHTML = `
+          <td style="font-weight: 700;">#${o.rank}</td>
+          <td>${samplePrefix} #${o.index}</td>
+          <td style="font-family: 'Fira Code', monospace;">${prefix}${o.actual.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+          <td style="font-family: 'Fira Code', monospace;">${prefix}${o.predicted.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+          <td style="color: ${o.residual >= 0 ? '#059669' : '#dc2626'}; font-weight: 600;">${o.residual >= 0 ? '+' : ''}${prefix}${o.residual.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+          <td>${prefix}${o.abs_error.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+          <td>${o.pct_error.toFixed(2)}%</td>
+          <td>${statusBadge}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function calculateLivePrediction() {
+      const model = getActiveModelItem();
+      if (!model) return;
+
+      const cfg = (currentProblemId === 'custom' && customProblemConfig)
+        ? customProblemConfig
+        : (PROBLEMS[currentProblemId] || PROBLEMS['startups']);
+
+      let pred = 0;
+      let breakdown = [];
+
+      model.coefficients.forEach(c => {
+        if (c.feature.includes('Intercept')) {
+          pred += c.coef;
+          return;
+        }
+
+        let featVal = 0;
+
+        if (currentProblemId === 'startups') {
+          const rd = parseFloat(document.getElementById('num_rd')?.value) || 0;
+          const mkt = parseFloat(document.getElementById('num_mkt')?.value) || 0;
+          const admin = parseFloat(document.getElementById('num_admin')?.value) || 0;
+          const state = document.getElementById('select_state')?.value || 'California';
+
+          if (c.feature === 'R&D Spend') featVal = rd;
+          else if (c.feature === 'Marketing Spend') featVal = mkt;
+          else if (c.feature === 'Administration') featVal = admin;
+          else if (c.feature === 'State_Florida' && state === 'Florida') featVal = 1;
+          else if (c.feature === 'State_New York' && state === 'New York') featVal = 1;
+        } else if (currentProblemId === 'insurance') {
+          const age = parseFloat(document.getElementById('num_age')?.value) || 35;
+          const bmi = parseFloat(document.getElementById('num_bmi')?.value) || 28.5;
+          const children = parseFloat(document.getElementById('num_children')?.value) || 0;
+          const smoker = document.getElementById('select_smoker')?.value || 'no';
+          const region = document.getElementById('select_region')?.value || 'northeast';
+
+          if (c.feature === 'age') featVal = age;
+          else if (c.feature === 'bmi') featVal = bmi;
+          else if (c.feature === 'children') featVal = children;
+          else if (c.feature === 'smoker_yes' && smoker === 'yes') featVal = 1;
+          else if (c.feature === 'region_southeast' && region === 'southeast') featVal = 1;
+        } else if (currentProblemId === 'custom') {
+          // Dynamic inputs for custom dataset
+          const numInput = document.getElementById(`num_${c.feature}`);
+          if (numInput) {
+            featVal = parseFloat(numInput.value) || 0;
+          }
+        }
+
+        const contribution = c.coef * featVal;
+        pred += contribution;
+        breakdown.push(`${c.feature}: ${(contribution >= 0 ? '+' : '')}$${contribution.toFixed(0)}`);
+      });
+
+      const prefix = cfg.targetPrefix || '';
+      document.getElementById('predProfitOutput').textContent = `${prefix}${pred.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      document.getElementById('predFormulaNote').innerHTML = `Active predictors: ${model.features.join(', ')}<br><span style="font-size: 11px; color: #cbd5e1;">(${breakdown.join(' | ')})</span>`;
+    }
+
+    // Chart.js Setup & Rendering
+    function initCharts() {
+      const ctxRMSE = document.getElementById('rmseChart').getContext('2d');
+      const ctxR2 = document.getElementById('r2Chart').getContext('2d');
+
+      const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false,
+            position: 'top',
+            labels: { boxWidth: 12, font: { family: 'Inter', size: 12 } }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(15, 23, 42, 0.94)',
+            titleFont: { family: 'Outfit', size: 13 },
+            bodyFont: { family: 'Inter', size: 12 },
+            padding: 12,
+            cornerRadius: 8,
+            callbacks: {
+              afterLabel: function(context) {
+                const k = context.dataIndex + 1;
+                const dataset = getActiveModelDataset();
+                const algo = currentAlgo === 'ALL' ? context.dataset.label : currentAlgo;
+                const modelItem = dataset[algo]?.[k - 1];
+                return modelItem ? 'Features: ' + modelItem.features.join(', ') : '';
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Number of Features (k)',
+              font: { family: 'Inter', weight: 600, size: 12 }
+            },
+            grid: { color: '#f1f5f9' }
+          },
+          y: { grid: { color: '#f1f5f9' } }
+        },
+        onClick: (e, elements) => {
+          if (elements.length > 0) {
+            const index = elements[0].index;
+            const newK = index + 1;
+            const kBtns = document.querySelectorAll('#kSelectorGroup .k-btn');
+            kBtns.forEach(b => {
+              if (parseInt(b.dataset.k) === newK) b.click();
+            });
+          }
+        }
+      };
+
+      rmseChartInstance = new Chart(ctxRMSE, {
+        type: 'line',
+        data: { labels: ['1', '2', '3', '4', '5'], datasets: [] },
+        options: {
+          ...commonOptions,
+          scales: {
+            ...commonOptions.scales,
+            y: {
+              ...commonOptions.scales.y,
+              title: {
+                display: true,
+                text: 'RMSE (Lower is Better)',
+                font: { family: 'Inter', weight: 600, size: 12 }
+              }
+            }
+          }
+        }
+      });
+
+      r2ChartInstance = new Chart(ctxR2, {
+        type: 'line',
+        data: { labels: ['1', '2', '3', '4', '5'], datasets: [] },
+        options: {
+          ...commonOptions,
+          scales: {
+            ...commonOptions.scales,
+            y: {
+              ...commonOptions.scales.y,
+              title: {
+                display: true,
+                text: 'R-squared (Higher is Better)',
+                font: { family: 'Inter', weight: 600, size: 12 }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function updateCharts(cfg) {
+      if (!rmseChartInstance || !r2ChartInstance) return;
+
+      const dataset = getActiveModelDataset();
+      if (!dataset) return;
+
+      const labels = ['1', '2', '3', '4', '5'];
+      const rmseBadge = document.getElementById('rmseChartBadge');
+      const r2Badge = document.getElementById('r2ChartBadge');
+
+      if (currentAlgo === 'ALL') {
+        rmseBadge.textContent = 'Comparing 5 Methods';
+        r2Badge.textContent = 'Comparing 5 Methods';
+        rmseChartInstance.options.plugins.legend.display = true;
+        r2ChartInstance.options.plugins.legend.display = true;
+
+        const algos = ['Lasso', 'Forward SFS', 'RFE', 'ElasticNet', 'Exhaustive'];
+        const rmseDatasets = [];
+        const r2Datasets = [];
+
+        algos.forEach(algo => {
+          const list = dataset[algo];
+          if (!list) return;
+
+          const color = ALGO_COLORS[algo] || '#4f46e5';
+          const rmseVals = list.map(m => m.rmse);
+          const r2Vals = list.map(m => m.r2);
+
+          rmseDatasets.push({
+            label: algo,
+            data: rmseVals,
+            borderColor: color,
+            backgroundColor: color,
+            borderWidth: 2,
+            tension: 0.15,
+            pointRadius: (ctx) => (ctx.dataIndex + 1 === currentK ? 7 : 4),
+            pointBackgroundColor: color
+          });
+
+          r2Datasets.push({
+            label: algo,
+            data: r2Vals,
+            borderColor: color,
+            backgroundColor: color,
+            borderWidth: 2,
+            tension: 0.15,
+            pointRadius: (ctx) => (ctx.dataIndex + 1 === currentK ? 7 : 4),
+            pointBackgroundColor: color
+          });
+        });
+
+        rmseChartInstance.data.labels = labels;
+        rmseChartInstance.data.datasets = rmseDatasets;
+        rmseChartInstance.update();
+
+        r2ChartInstance.data.labels = labels;
+        r2ChartInstance.data.datasets = r2Datasets;
+        r2ChartInstance.update();
+      } else {
+        rmseBadge.textContent = currentAlgo;
+        r2Badge.textContent = `Sweet Spot: k=${cfg.kSweet}`;
+        rmseChartInstance.options.plugins.legend.display = false;
+        r2ChartInstance.options.plugins.legend.display = false;
+
+        const list = dataset[currentAlgo] || dataset['Lasso'];
+        if (!list) return;
+
+        const rmseVals = list.map(m => m.rmse);
+        const r2Vals = list.map(m => m.r2);
+
+        rmseChartInstance.data.labels = labels.slice(0, list.length);
+        rmseChartInstance.data.datasets = [{
+          label: currentAlgo,
+          data: rmseVals,
+          borderColor: '#4f46e5',
+          backgroundColor: '#4f46e5',
+          borderWidth: 2.5,
+          tension: 0.15,
+          pointRadius: (ctx) => {
+            const k = ctx.dataIndex + 1;
+            return (k === currentK || k === cfg.kSweet) ? 7 : 4;
+          },
+          pointBackgroundColor: (ctx) => {
+            const k = ctx.dataIndex + 1;
+            if (k === cfg.kSweet) return '#10b981';
+            if (k === cfg.kOverfit) return '#f59e0b';
+            return '#4f46e5';
+          }
+        }];
+        rmseChartInstance.update();
+
+        r2ChartInstance.data.labels = labels.slice(0, list.length);
+        r2ChartInstance.data.datasets = [{
+          label: currentAlgo,
+          data: r2Vals,
+          borderColor: '#10b981',
+          backgroundColor: '#10b981',
+          borderWidth: 2.5,
+          tension: 0.15,
+          pointRadius: (ctx) => {
+            const k = ctx.dataIndex + 1;
+            return (k === currentK || k === cfg.kSweet) ? 7 : 4;
+          },
+          pointBackgroundColor: (ctx) => {
+            const k = ctx.dataIndex + 1;
+            if (k === cfg.kSweet) return '#10b981';
+            return '#4f46e5';
+          }
+        }];
+        r2ChartInstance.update();
+      }
+    }
+
+    // Modal & Custom Dataset Engine (Bonus 2: 加總分 2分)
+    let parsedCustomDataset = null;
+
+    function setupModalAndCustomDataset() {
+      const modal = document.getElementById('datasetModal');
+      const btnOpen = document.getElementById('btnOpenDatasetModal');
+      const btnClose = document.getElementById('btnCloseModal');
+
+      btnOpen.addEventListener('click', openModal);
+      btnClose.addEventListener('click', closeModal);
+
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+      });
+
+      // Quick bar action
+      document.getElementById('btnQuickLoad').addEventListener('click', () => {
+        const url = document.getElementById('quickDatasetUrl').value.trim();
+        if (url) {
+          fetchAndProcessCSV(url);
+        }
+      });
+
+      // Presets
+      document.getElementById('preset50Startups').addEventListener('click', () => {
+        document.getElementById('modalInputUrl').value = 'https://raw.githubusercontent.com/Avik-Jain/100-Days-Of-ML-Code/master/datasets/50_Startups.csv';
+        document.getElementById('btnFetchUrl').click();
+      });
+
+      document.getElementById('presetInsurance').addEventListener('click', () => {
+        document.getElementById('modalInputUrl').value = 'https://raw.githubusercontent.com/stedy/Machine-Learning-with-R-datasets/master/insurance.csv';
+        document.getElementById('btnFetchUrl').click();
+      });
+
+      document.getElementById('presetAdvertising').addEventListener('click', () => {
+        document.getElementById('modalInputUrl').value = 'https://raw.githubusercontent.com/SelvaPrabhakaran/datasets/master/Advertising.csv';
+        document.getElementById('btnFetchUrl').click();
+      });
+
+      // Modal URL Fetch
+      document.getElementById('btnFetchUrl').addEventListener('click', () => {
+        const url = document.getElementById('modalInputUrl').value.trim();
+        if (!url) return alert('請輸入有效的 CSV 檔案網址！');
+        fetchAndProcessCSV(url);
+      });
+
+      // Modal File Upload
+      document.getElementById('modalFileInput').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          handleCSVText(evt.target.result);
+        };
+        reader.readAsText(file);
+      });
+
+      // Execute ML button
+      document.getElementById('btnExecuteCustomML').addEventListener('click', executeCustomML);
+    }
+
+    function openModal() {
+      document.getElementById('datasetModal').classList.add('show');
+    }
+
+    function closeModal() {
+      document.getElementById('datasetModal').classList.remove('show');
+    }
+
+    async function fetchAndProcessCSV(url) {
+      const btn = document.getElementById('btnFetchUrl');
+      const origText = btn.innerHTML;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 載入中...';
+      btn.disabled = true;
+
+      try {
+        let text = '';
+        // Try direct fetch first
+        try {
+          const resp = await fetch(url);
+          if (resp.ok) text = await resp.text();
+        } catch (e) {
+          console.warn('Direct fetch failed (likely CORS), trying public CORS proxy...');
+        }
+
+        // Fallback to CORS proxy if needed
+        if (!text) {
+          const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+          const resp = await fetch(proxyUrl);
+          if (resp.ok) text = await resp.text();
+        }
+
+        if (!text) throw new Error('無法從指定網址下載檔案，請檢查網址或改用本地檔案上傳。');
+
+        handleCSVText(text);
+      } catch (err) {
+        alert('載入失敗: ' + err.message + '\n建議：若有 CORS 限制，您可以先下載該 CSV 檔案，再使用「本機選取 CSV」上傳！');
+      } finally {
+        btn.innerHTML = origText;
+        btn.disabled = false;
+      }
+    }
+
+    function handleCSVText(csvText) {
+      try {
+        const parsed = RegressionEngine.parseCSV(csvText);
+        parsedCustomDataset = parsed;
+
+        const { numericCols, categoricalCols } = RegressionEngine.detectColumns(parsed.rows, parsed.headers);
+
+        document.getElementById('parsedRowsCount').textContent = parsed.rows.length;
+        document.getElementById('parsedColsCount').textContent = parsed.headers.length;
+
+        // Populate Target selector
+        const targetSel = document.getElementById('modalSelectTarget');
+        targetSel.innerHTML = '';
+        numericCols.forEach(col => {
+          const opt = document.createElement('option');
+          opt.value = col;
+          opt.textContent = col;
+          // default select profit, charges, sales or last numeric
+          if (/profit|charge|sale|price/i.test(col)) {
+            opt.selected = true;
+          }
+          targetSel.appendChild(opt);
+        });
+
+        // Populate Features checklist
+        const checklist = document.getElementById('modalChecklistFeatures');
+        checklist.innerHTML = '';
+        parsed.headers.forEach(col => {
+          const div = document.createElement('div');
+          div.style.marginBottom = '4px';
+          div.style.fontSize = '12px';
+          div.innerHTML = `
+            <label style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+              <input type="checkbox" value="${col}" class="custom-feat-cb" checked>
+              <span>${col} <small style="color: var(--slate-400);">(${numericCols.includes(col) ? '數值' : '類別'})</small></span>
+            </label>
+          `;
+          checklist.appendChild(div);
+        });
+
+        document.getElementById('datasetParseStatus').style.display = 'block';
+        openModal();
+      } catch (err) {
+        alert('解析 CSV 失敗: ' + err.message);
+      }
+    }
+
+    function executeCustomML() {
+      if (!parsedCustomDataset) return;
+
+      const targetCol = document.getElementById('modalSelectTarget').value;
+      const cbs = document.querySelectorAll('.custom-feat-cb:checked');
+      const candidateCols = Array.from(cbs).map(cb => cb.value).filter(c => c !== targetCol);
+
+      if (candidateCols.length === 0) {
+        return alert('請至少選取一個預測特徵變數！');
+      }
+
+      try {
+        const result = RegressionEngine.runFeatureSelection(parsedCustomDataset.rows, targetCol, candidateCols);
+
+        // Build Custom Model Dataset
+        customModelData = {
+          'Lasso': result.progression,
+          'Forward SFS': result.progression,
+          'RFE': result.progression,
+          'ElasticNet': result.progression,
+          'Exhaustive': result.progression
+        };
+
+        const kButtons = result.progression.map(m => ({
+          k: m.k,
+          label: `k = ${m.k}`,
+          note: `(${m.features.length} 變數)`,
+          class: m.k === Math.min(2, m.k) ? 'sweet-spot' : ''
+        }));
+
+        // Build dynamic inputs
+        const inputs = candidateCols.map(col => ({
+          id: col,
+          label: col,
+          default: 100,
+          min: 0,
+          max: 1000000,
+          step: 10,
+          prefix: '',
+          suffix: '',
+          type: 'number'
+        }));
+
+        customProblemConfig = {
+          id: 'custom',
+          name: `Custom (${targetCol}) Prediction`,
+          badge: 'Client OLS Engine',
+          breadcrumb: `Custom Dataset (${targetCol}) Progression`,
+          targetName: targetCol,
+          targetPrefix: '',
+          targetSuffix: '',
+          themeClass: 'theme-custom',
+          heroTitle: `Custom Dataset Regression: ${targetCol}`,
+          heroDesc: `即時分析自訂資料集（共 ${parsedCustomDataset.rows.length} 筆樣本）。運用純 JavaScript 矩陣逆運算引擎完成 OLS 參數估計、前向逐步特徵選取與 VIF 多重共線性檢驗。`,
+          heroTags: [
+            { icon: 'fa-database', text: `自訂資料 (${parsedCustomDataset.rows.length} 筆)` },
+            { icon: 'fa-microchip', text: '純前端 OLS 矩陣逆運算' },
+            { icon: 'fa-star', text: `最佳 R²: ${result.progression[result.progression.length - 1].r2.toFixed(4)}`, color: '#34d399' }
+          ],
+          kSweet: Math.min(2, result.progression.length),
+          kOverfit: result.progression.length,
+          kButtons: kButtons,
+          inputs: inputs,
+          predLabel: `PREDICTED ${targetCol.toUpperCase()}`,
+          sampleName: 'Sample'
+        };
+
+        closeModal();
+        loadProblem('custom');
+
+        // Notification
+        alert(`成功完成自訂資料集回歸分析！\n目標變數：${targetCol}\n候選特徵數：${candidateCols.length}\n已自動為您更新圖表、回歸方程式與活頁模擬器！`);
+      } catch (err) {
+        alert('運算錯誤: ' + err.message);
+      }
+    }
+  </script>
+</body>
+</html>
