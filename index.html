@@ -150,7 +150,7 @@
       flex-wrap: wrap;
     }
 
-    /* Problem Selector Dropdown (Bonus Requirement 1: 加總分 1分) */
+    /* Problem Selector Dropdown */
     .problem-switcher-wrap {
       display: flex;
       align-items: center;
@@ -315,7 +315,7 @@
       gap: 6px;
     }
 
-    /* Bonus 2: Arbitrary Dataset Banner / Panel */
+    /* Custom Dataset Banner / Panel */
     .dataset-input-bar {
       background: white;
       border-radius: var(--radius-lg);
@@ -1031,24 +1031,23 @@
       </div>
       
       <div class="header-actions">
-        <!-- Bonus 1: Problem Switcher Dropdown (加總分 1分) -->
-        <div class="problem-switcher-wrap" title="點此在兩種不同 Problem 間切換 (加總分 1分)">
+        <!-- Problem Switcher Dropdown -->
+        <div class="problem-switcher-wrap" title="切換分析問題">
           <label for="problemSelect">
             <i class="fa-solid fa-code-compare"></i> 選擇題目:
           </label>
           <select id="problemSelect" class="problem-dropdown">
-            <option value="startups" selected>📊 題目一：50 Startups 獲利回歸 (基本要求)</option>
-            <option value="boston">🏠 題目二：Boston Housing 房價預測 (加分資料集)</option>
-            <option value="insurance">🏥 擴充題目：醫療保險費用預測 (CRISP-DM)</option>
-            <option value="custom">🧪 自訂資料集分析 (任意 CSV 輸入 加總分2分)</option>
+            <option value="startups" selected>📊 50 Startups 獲利回歸</option>
+            <option value="boston">🏠 Boston Housing 房價預測</option>
+            <option value="insurance">🏥 醫療保險費用預測</option>
+            <option value="custom">🧪 自訂資料集分析</option>
           </select>
         </div>
 
-        <!-- Bonus 2: Arbitrary Dataset Button (加總分 2分) -->
-        <button id="btnOpenDatasetModal" class="btn-dataset-modal" title="點擊輸入任意 CSV 資料集網址或上傳 (加總分 2分)">
+        <!-- Custom Dataset Button -->
+        <button id="btnOpenDatasetModal" class="btn-dataset-modal" title="輸入任意 CSV 資料集網址或上傳本地檔案">
           <i class="fa-solid fa-file-arrow-up"></i>
           任意輸入 Dataset
-          <span class="bonus-pill-tag">+2分</span>
         </button>
 
         <a href="https://statsunlock.com/multiple-linear-regression-calculator/" target="_blank" class="ref-btn">
@@ -1075,17 +1074,14 @@
       </div>
     </div>
 
-    <!-- Quick Dataset Bar (Bonus 2: 加總分 2分) -->
+    <!-- Quick Dataset Bar -->
     <div class="dataset-input-bar" id="datasetQuickBar">
       <div class="dataset-input-bar-left">
         <div style="font-size: 24px; color: var(--primary);">
           <i class="fa-solid fa-wand-magic-sparkles"></i>
         </div>
         <div class="dataset-input-bar-info">
-          <h4>
-            任意資料集線上即時回歸引擎
-            <span class="badge-tag badge-amber"><i class="fa-solid fa-star"></i> 加總分 2分</span>
-          </h4>
+          <h4>任意資料集線上即時回歸引擎</h4>
           <p>輸入任意 CSV 網址（如 GitHub Raw）、上傳本地檔案、或點選範例快速試驗，純前端即時計算 OLS 統計推論！</p>
         </div>
       </div>
@@ -1336,14 +1332,13 @@
 
   </div>
 
-  <!-- Custom Dataset Modal (Bonus Requirement 2: 加總分 2分) -->
+  <!-- Custom Dataset Modal -->
   <div class="modal-backdrop" id="datasetModal">
     <div class="modal-box">
       <div class="modal-header">
         <h3>
           <i class="fa-solid fa-database" style="color: var(--primary);"></i>
-          任意輸入自訂資料集 (Custom Dataset ML Engine)
-          <span class="bonus-pill-tag">加總分 +2</span>
+          自訂資料集分析引擎 (Custom Dataset ML Engine)
         </h3>
         <button class="btn-close-modal" id="btnCloseModal">&times;</button>
       </div>
@@ -1357,16 +1352,16 @@
         <label style="font-size: 12px; font-weight: 700; color: var(--slate-500); text-transform: uppercase;">快速試用範例資料集：</label>
         <div class="quick-preset-btns">
           <button class="preset-chip" id="preset50Startups">
-            <i class="fa-solid fa-building"></i> 50_Startups.csv (題目一)
+            <i class="fa-solid fa-building"></i> 50_Startups.csv
           </button>
           <button class="preset-chip" id="presetBoston">
-            <i class="fa-solid fa-house-chimney"></i> BostonHousing.csv (題目二 加分項)
+            <i class="fa-solid fa-house-chimney"></i> BostonHousing.csv
           </button>
           <button class="preset-chip" id="presetInsurance">
-            <i class="fa-solid fa-hospital-user"></i> insurance.csv (醫療保險)
+            <i class="fa-solid fa-hospital-user"></i> insurance.csv
           </button>
           <button class="preset-chip" id="presetAdvertising">
-            <i class="fa-solid fa-bullhorn"></i> Advertising.csv (廣告營收)
+            <i class="fa-solid fa-bullhorn"></i> Advertising.csv
           </button>
         </div>
       </div>
@@ -1610,7 +1605,7 @@
       loadProblem('startups');
     });
 
-    // Problem Switcher setup (加總分 1分)
+    // Problem Switcher setup
     function setupProblemSwitcher() {
       const select = document.getElementById('problemSelect');
       select.addEventListener('change', (e) => {
@@ -2218,7 +2213,7 @@
       }
     }
 
-    // Modal & Custom Dataset Engine (Bonus 2: 加總分 2分)
+    // Modal & Custom Dataset Engine
     let parsedCustomDataset = null;
 
     function setupModalAndCustomDataset() {
@@ -2387,33 +2382,33 @@
       try {
         const result = RegressionEngine.runFeatureSelection(parsedCustomDataset.rows, targetCol, candidateCols);
 
-        // Build Custom Model Dataset
+        // ── Wire each algorithm to its own unique progression ────────────────
         customModelData = {
-          'Lasso': result.progression,
-          'Forward SFS': result.progression,
-          'RFE': result.progression,
-          'ElasticNet': result.progression,
-          'Exhaustive': result.progression
+          'Lasso':       result['Lasso'],
+          'Forward SFS': result['Forward SFS'],
+          'RFE':         result['RFE'],
+          'ElasticNet':  result['ElasticNet'],
+          'Exhaustive':  result['Exhaustive']
         };
 
-        const kButtons = result.progression.map(m => ({
+        // ── Auto-detect sweet spot: k with minimum test RMSE in Forward SFS ──
+        const fwdProg = result['Forward SFS'];
+        let sweetK = 1, minRMSE = Infinity;
+        fwdProg.forEach(m => { if (m.rmse < minRMSE) { minRMSE = m.rmse; sweetK = m.k; } });
+        const bestModel = fwdProg[sweetK - 1];
+
+        const kButtons = fwdProg.map(m => ({
           k: m.k,
-          label: `k = ${m.k}`,
-          note: `(${m.features.length} 變數)`,
-          class: m.k === Math.min(2, m.k) ? 'sweet-spot' : ''
+          label: `k = ${m.k}${m.k === sweetK ? ' ★ Optimal Sweet Spot' : m.k === fwdProg.length ? ' ⚠ Full Model' : ''}`,
+          note: `(${m.features.join(', ')})`,
+          class: m.k === sweetK ? 'sweet-spot' : m.k === fwdProg.length ? 'overfitting' : ''
         }));
 
-        // Build dynamic inputs
+        // ── Dynamic inputs: use all candidate cols as predictors ─────────────
         const inputs = candidateCols.map(col => ({
-          id: col,
-          label: col,
-          default: 100,
-          min: 0,
-          max: 1000000,
-          step: 10,
-          prefix: '',
-          suffix: '',
-          type: 'number'
+          id: col, label: col, default: 100,
+          min: 0, max: 1000000, step: 10,
+          prefix: '', suffix: '', type: 'number'
         }));
 
         customProblemConfig = {
@@ -2422,29 +2417,25 @@
           badge: 'Client OLS Engine',
           breadcrumb: `Custom Dataset (${targetCol}) Progression`,
           targetName: targetCol,
-          targetPrefix: '',
-          targetSuffix: '',
+          targetPrefix: '', targetSuffix: '',
           themeClass: 'theme-custom',
           heroTitle: `Custom Dataset Regression: ${targetCol}`,
-          heroDesc: `即時分析自訂資料集（共 ${parsedCustomDataset.rows.length} 筆樣本）。運用純 JavaScript 矩陣逆運算引擎完成 OLS 參數估計、前向逐步特徵選取與 VIF 多重共線性檢驗。`,
+          heroDesc: `即時分析自訂資料集（共 ${parsedCustomDataset.rows.length} 筆樣本）。運用純 JavaScript 矩陣逆運算引擎完成 OLS 參數估計、5 種特徵選取策略比較與 VIF 多重共線性檢驗。訓練/測試切分比例 80/20，採隨機打亂以避免資料排序偏差。`,
           heroTags: [
             { icon: 'fa-database', text: `自訂資料 (${parsedCustomDataset.rows.length} 筆)` },
             { icon: 'fa-microchip', text: '純前端 OLS 矩陣逆運算' },
-            { icon: 'fa-star', text: `最佳 R²: ${result.progression[result.progression.length - 1].r2.toFixed(4)}`, color: '#34d399' }
+            { icon: 'fa-star', text: `Sweet Spot: k=${sweetK}, R²=${bestModel.r2.toFixed(4)}, RMSE=${bestModel.rmse.toFixed(2)}`, color: '#34d399' }
           ],
-          kSweet: Math.min(2, result.progression.length),
-          kOverfit: result.progression.length,
-          kButtons: kButtons,
-          inputs: inputs,
+          kSweet: sweetK,
+          kOverfit: fwdProg.length,
+          kButtons, inputs,
           predLabel: `PREDICTED ${targetCol.toUpperCase()}`,
           sampleName: 'Sample'
         };
 
         closeModal();
         loadProblem('custom');
-
-        // Notification
-        alert(`成功完成自訂資料集回歸分析！\n目標變數：${targetCol}\n候選特徵數：${candidateCols.length}\n已自動為您更新圖表、回歸方程式與活頁模擬器！`);
+        alert(`成功完成自訂資料集回歸分析！\n目標變數：${targetCol}\n候選特徵數：${candidateCols.length}\n最佳甜蜜點：k=${sweetK}（RMSE = ${minRMSE.toFixed(2)}, R² = ${bestModel.r2.toFixed(4)}）\n已自動切換並更新所有圖表！`);
       } catch (err) {
         alert('運算錯誤: ' + err.message);
       }
