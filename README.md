@@ -1,4 +1,4 @@
-# 50 Startups & Medical Insurance: Multiple Linear Regression & Feature Selection Explorer (CRISP-DM)
+# 50 Startups & Boston Housing: Multiple Linear Regression & Feature Selection Explorer (CRISP-DM)
 
 > 國立中興大學 (NCHU) 物聯網與資料探勘課程作業二 (AIoT Assignment 2)  
 > 遵循 **CRISP-DM** 跨行業資料探勘標準流程，實作多元線性回歸（Multiple Linear Regression, OLS）與五大特徵選取演算法之系統化評估。
@@ -25,23 +25,26 @@
 
 本作業已完整實作老師所規範的兩大加分功能（**總計加 3 分滿分**）：
 
-### 1. 【加總分 1分】下拉式視窗呈現兩種 Problem
-在網頁頂端導覽列及控制區設有 **「選擇題目 (Topic)」下拉式選單**：
-- **題目一 (Problem 1)：50 Startups 獲利回歸分析（CRISP-DM）**
-  - 目標變數：`Profit`（新創企業淨利）
+### 1. 【基本要求 + 加總分 1分】下拉式視窗呈現兩種 Problem
+在網頁頂端導覽列及控制區設有 **「選擇題目 (Topic)」下拉式選單**，提供完整題型切換：
+- **題目一【基本要求】：50 Startups 獲利回歸分析（CRISP-DM）**
+  - 資料集：50 家新創企業研發、行政、行銷開銷與所在地（50 筆）
+  - 目標變數：`Profit`（新創企業淨利，美元）
   - 特徵變數：`R&D Spend`, `Marketing Spend`, `Administration`, `State_Florida`, `State_New York`
   - 核心發現：確認 **$k=2$ 甜蜜點（`['R&D Spend', 'Marketing Spend']`）**，測試集 RMSE 降至最低 **$8,198.80**，而納入 5 變數時因雜訊導致 RMSE 暴增至 **$9,137.99**（過擬合斷崖）。
-- **題目二 (Problem 2)：醫療保險費用預測（Medical Insurance Charges, CRISP-DM）**
-  - 資料集：US Medical Cost Personal Datasets (1,338 筆樣本)
-  - 目標變數：`Charges`（醫療保險年度支出）
-  - 特徵變數：`smoker_yes`, `bmi`, `age`, `children`, `region_southeast`
-  - 核心發現：確認 **$k=3$ 甜蜜點（`['smoker_yes', 'bmi', 'age']`）**，以最簡約的 3 個特徵即解釋了 99.8% 的可解釋變異（$R^2 = 0.7483$，RMSE = **$6,062.40**），加入地區虛擬變數後 p 值高達 0.2778（不顯著），驗證了簡約性原則。
+- **題目二【加分資料集】：Boston Housing 房價預測（CRISP-DM Real Estate）**
+  - 資料集：波士頓 506 個城鎮區塊之社經環境與房價中位數（`BostonHousing.csv`，506 筆）
+  - 目標變數：`MEDV`（自住房屋中位價值，千美元 $1,000s）
+  - 候選特徵：`lstat`（社經地位偏低人口比例 %）、`rm`（每戶平均房間數）、`ptratio`（師生比）、`dis`（就業中心距離）、`crim`（人均犯罪率）
+  - 核心發現：確認 **$k=3$ 最佳甜蜜點（`['lstat', 'rm', 'ptratio']`）**，解釋高達 **71.92%** 的房價變異（$R^2 = 0.7192$，RMSE = **$5.32k**）。三個主導變數皆具極高統計顯著性（$p < 0.0001$）。
+- **題目三【進階擴充】：醫療保險費用預測（Medical Insurance Charges）**
+  - 保留 1,338 筆醫療資料供深度驗證吸菸與 BMI 之非線性主導效應。
 
 切換下拉選單時，全站所有 KPI 指標卡、雙面板動態折線圖、Fitted 回歸方程式、參數估計統計表、即時活頁模擬滑桿、以及殘差診斷表將**即時無縫切換**！
 
 ### 2. 【加總分 2分】可任意輸入自訂 Dataset
 提供強大的**純前端即時矩陣運算回歸分析引擎（`regression_engine.js`）**：
-- 支援直接輸入任何公開 CSV 檔案網址（預設填入老師指定的 `https://raw.githubusercontent.com/Avik-Jain/100-Days-Of-ML-Code/master/datasets/50_Startups.csv`）。
+- 支援直接輸入任何公開 CSV 檔案網址（內建快捷按鈕：50 Startups、**Boston Housing**、Insurance、Advertising）。
 - 支援本機檔案拖曳上傳（Local CSV Upload）。
 - 內建高精度**高斯-若爾當（Gauss-Jordan）消去法矩陣逆運算**，於瀏覽器端毫秒級完成：
   - $\hat{\beta} = (X^T X)^{-1} X^T y$
@@ -90,6 +93,23 @@ $$\mathbf{Profit} = 46,346.34 + 0.7886 \times (\text{R\&D Spend}) + 0.0326 \time
 
 - **VIF（變異數膨脹因子）**：2.10 遠低於警戒臨界值 5.0，表示此二變數間無嚴重多重共線性問題。
 - **整體模型檢定**：$F(2, 37) = 349.0, p < 0.0001$，$R^2 = 0.9474$，調整後 $R^2 = 0.9324$。
+
+### 題目二：Boston Housing Fitted OLS Equation ($k=3$ 最佳甜蜜點)
+$$\mathbf{MEDV} = 19.3364 - 0.5847 \times (\text{lstat}) + 4.4173 \times (\text{rm}) - 0.9419 \times (\text{ptratio})$$
+
+#### 參數估計與統計顯著性表 (StatsUnlock 格式)：
+| 預測變數 (Predictor) | 估計係數 ($\beta$) | 標準誤 (Std. Error) | $t$-統計量 | $p$-值 | 95% 信賴區間 | VIF (共線性) |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **截距項 ($\beta_0$)** | 19.3364 | 4.8872 | 3.957 | $0.0001$ ★ | [9.76, 28.92] | — |
+| **lstat (低社經比例)** | -0.5847 | 0.0521 | -11.222 | $< 0.0001$ ★ | [-0.69, -0.48] | 1.76 (安全) |
+| **rm (平均房間數)** | 4.4173 | 0.5054 | 8.740 | $< 0.0001$ ★ | [3.43, 5.41] | 1.62 (安全) |
+| **ptratio (師生比)** | -0.9419 | 0.1508 | -6.248 | $< 0.0001$ ★ | [-1.24, -0.65] | 1.17 (安全) |
+
+- **關鍵經濟學解釋**：
+  - 房間數每增加 1 間，房價中位數平均提高 **$4,417 美元**（正向主導效應）。
+  - 低社經人口比例每增加 1%，房價中位數降低 **$585 美元**（負向顯著效應）。
+  - 學區師生比每增加 1 個學生/教師，房價降低 **$942 美元**（負向顯著效應）。
+- **模型適配度**：$R^2 = 0.7192$，調整後 $R^2 = 0.7171$，測試集 RMSE = **$5.32k**，整體檢定 $F(3, 400) = 341.2, p < 0.0001$。
 
 ---
 
@@ -172,10 +192,13 @@ git push -u origin main
 ## 📁 專案檔案結構
 
 ```text
-├── index.html                           # 核心前端單頁應用（含 StatsUnlock 美學與互動計算器）
+├── index.html                           # 核心前端單頁應用（含 StatsUnlock 美學與多題互動計算器）
 ├── regression_engine.js                 # 純前端高精度 OLS 矩陣逆運算與特徵選取引擎 (加分項 2)
-├── model_data.js                        # 題目一 50 Startups 預先計算之模型統計資料
-├── insurance_data.js                    # 題目二 Medical Insurance 預先計算之模型統計資料 (加分項 1)
+├── model_data.js / model_data.json      # 題目一 50 Startups 預先計算之模型統計資料 (基本要求)
+├── boston_data.js / boston_data.json    # 題目二 Boston Housing 預先計算之模型統計資料 (加分項 1)
+├── insurance_data.js                    # 擴充題 Medical Insurance 預先計算之模型統計資料
+├── BostonHousing.csv                    # 本地 Boston Housing 原始資料集
+├── 50_Startups.csv                      # 本地 50 Startups 原始資料集
 ├── app.py                               # Flask Web 應用與 REST API 伺服器 (可選)
 ├── main.py                              # CRISP-DM 六大階段完整 Python 統計訓練程式
 ├── feature_progression_analysis.py      # 特徵推進評估與橫向比較繪圖腳本
@@ -196,6 +219,7 @@ git push -u origin main
    [StatsUnlock Multiple Linear Regression Calculator](https://statsunlock.com/multiple-linear-regression-calculator/)
 2. **Datasets**:  
    - Avik Jain (2018). *100 Days of ML Code - 50 Startups Dataset*.
+   - Harrison, D. and Rubinfeld, D.L. (1978). *Hedonic prices and the demand for clean air*, J. Environ. Economics & Management, vol.5, 81-102 (Boston Housing Dataset).
    - Brett Lantz (2019). *Machine Learning with R - Medical Cost Personal Datasets*.
 3. **Methodology**:  
    Wirth, R., & Hipp, J. (2000). *CRISP-DM: Towards a standard process model for data mining*. In Proceedings of the 4th International Conference on the Practical Applications of Knowledge Discovery and Data Mining.

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>50 Startups & Medical Insurance: Multiple Linear Regression & Feature Selection Explorer (CRISP-DM)</title>
+  <title>50 Startups & Boston Housing: Multiple Linear Regression & Feature Selection Explorer (CRISP-DM)</title>
   
   <!-- Google Fonts: Outfit, Inter & Fira Code -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,6 +18,7 @@
   
   <!-- Scripts: Regression Engine and Precomputed Model Data -->
   <script src="regression_engine.js"></script>
+  <script src="boston_data.js"></script>
   <script src="insurance_data.js"></script>
   <script src="model_data.js"></script>
 
@@ -258,6 +259,10 @@
 
     .hero-card.theme-insurance {
       background: linear-gradient(135deg, #064e3b 0%, #065f46 40%, #047857 100%);
+    }
+
+    .hero-card.theme-boston {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 40%, #0369a1 100%);
     }
 
     .hero-card.theme-custom {
@@ -1032,9 +1037,10 @@
             <i class="fa-solid fa-code-compare"></i> 選擇題目:
           </label>
           <select id="problemSelect" class="problem-dropdown">
-            <option value="startups" selected>📊 題目一：50 Startups 獲利回歸 (CRISP-DM)</option>
-            <option value="insurance">🏥 題目二：醫療保險費用預測 (CRISP-DM)</option>
-            <option value="custom">🧪 自訂資料集分析 (任意 CSV 輸入)</option>
+            <option value="startups" selected>📊 題目一：50 Startups 獲利回歸 (基本要求)</option>
+            <option value="boston">🏠 題目二：Boston Housing 房價預測 (加分資料集)</option>
+            <option value="insurance">🏥 擴充題目：醫療保險費用預測 (CRISP-DM)</option>
+            <option value="custom">🧪 自訂資料集分析 (任意 CSV 輸入 加總分2分)</option>
           </select>
         </div>
 
@@ -1351,7 +1357,10 @@
         <label style="font-size: 12px; font-weight: 700; color: var(--slate-500); text-transform: uppercase;">快速試用範例資料集：</label>
         <div class="quick-preset-btns">
           <button class="preset-chip" id="preset50Startups">
-            <i class="fa-solid fa-building"></i> 50_Startups.csv (老師推薦)
+            <i class="fa-solid fa-building"></i> 50_Startups.csv (題目一)
+          </button>
+          <button class="preset-chip" id="presetBoston">
+            <i class="fa-solid fa-house-chimney"></i> BostonHousing.csv (題目二 加分項)
           </button>
           <button class="preset-chip" id="presetInsurance">
             <i class="fa-solid fa-hospital-user"></i> insurance.csv (醫療保險)
@@ -1484,6 +1493,43 @@
         ],
         predLabel: 'PREDICTED STARTUP PROFIT',
         sampleName: 'Startup'
+      },
+
+      'boston': {
+        id: 'boston',
+        name: 'Boston Housing Price Prediction',
+        badge: 'CRISP-DM Real Estate',
+        breadcrumb: 'Boston Housing Feature Progression',
+        targetName: 'MEDV (房價中位數, $1,000s)',
+        targetPrefix: '$',
+        targetSuffix: 'k',
+        themeClass: 'theme-boston',
+        heroTitle: 'Boston Housing Price & Urban Indicator Analysis',
+        heroDesc: 'Evaluate 5 Feature Selection Algorithms on the standard Boston Housing Dataset (506 census tracts). Discover the dominant parsimony sweet spot ($k=3$: % Lower Status <code>LSTAT</code>, Room Count <code>RM</code>, and Pupil-Teacher Ratio <code>PTRATIO</code>) accounting for over 71.9% of housing price variation.',
+        heroTags: [
+          { icon: 'fa-house-chimney', text: 'Boston Housing Dataset (N=506)' },
+          { icon: 'fa-layer-group', text: '5 Selection Methods' },
+          { icon: 'fa-star', text: 'Global Sweet Spot: k=3 ($5.32k RMSE / R² 0.7192)', color: '#34d399' },
+          { icon: 'fa-chart-pie', text: 'Key Drivers: LSTAT (-), RM (+), PTRATIO (-)', color: '#38bdf8' }
+        ],
+        kSweet: 3,
+        kOverfit: 5,
+        kButtons: [
+          { k: 1, label: 'k = 1', note: '(LSTAT 社經地位)', class: '' },
+          { k: 2, label: 'k = 2', note: '(+ RM 房間數)', class: '' },
+          { k: 3, label: 'k = 3 ★ Optimal Sweet Spot', note: '(LSTAT + RM + PTRATIO)', class: 'sweet-spot' },
+          { k: 4, label: 'k = 4', note: '(+ DIS 就業中心距離)', class: '' },
+          { k: 5, label: 'k = 5 ⚠ Full Model', note: '(+ CRIM 犯罪率)', class: 'overfitting' }
+        ],
+        inputs: [
+          { id: 'lstat', label: 'LSTAT (% 較低社經地位人口比例)', default: 12.5, min: 1, max: 40, step: 0.5, prefix: '', suffix: '%', type: 'number' },
+          { id: 'rm', label: 'RM (每戶平均房間數)', default: 6.2, min: 3, max: 9, step: 0.1, prefix: '', suffix: ' 間', type: 'number' },
+          { id: 'ptratio', label: 'PTRATIO (師生比)', default: 18.0, min: 12, max: 23, step: 0.5, prefix: '', suffix: ' :1', type: 'number' },
+          { id: 'dis', label: 'DIS (距就業中心加權距離)', default: 3.8, min: 1, max: 12, step: 0.2, prefix: '', suffix: ' km', type: 'number' },
+          { id: 'crim', label: 'CRIM (城鎮人均犯罪率)', default: 0.25, min: 0, max: 50, step: 0.1, prefix: '', suffix: '', type: 'number' }
+        ],
+        predLabel: 'PREDICTED MEDIAN HOME VALUE (MEDV)',
+        sampleName: 'Census Tract'
       },
 
       'insurance': {
@@ -1712,6 +1758,8 @@
     function getActiveModelDataset() {
       if (currentProblemId === 'startups') {
         return window.STARTUPS_DATA || window.MODEL_DATA;
+      } else if (currentProblemId === 'boston') {
+        return window.BOSTON_DATA;
       } else if (currentProblemId === 'insurance') {
         return window.INSURANCE_DATA;
       } else if (currentProblemId === 'custom' && customModelData) {
@@ -1910,6 +1958,18 @@
           else if (c.feature === 'Administration') featVal = admin;
           else if (c.feature === 'State_Florida' && state === 'Florida') featVal = 1;
           else if (c.feature === 'State_New York' && state === 'New York') featVal = 1;
+        } else if (currentProblemId === 'boston') {
+          const lstat = parseFloat(document.getElementById('num_lstat')?.value) || 12.5;
+          const rm = parseFloat(document.getElementById('num_rm')?.value) || 6.2;
+          const ptratio = parseFloat(document.getElementById('num_ptratio')?.value) || 18.0;
+          const dis = parseFloat(document.getElementById('num_dis')?.value) || 3.8;
+          const crim = parseFloat(document.getElementById('num_crim')?.value) || 0.25;
+
+          if (c.feature === 'lstat') featVal = lstat;
+          else if (c.feature === 'rm') featVal = rm;
+          else if (c.feature === 'ptratio') featVal = ptratio;
+          else if (c.feature === 'dis') featVal = dis;
+          else if (c.feature === 'crim') featVal = crim;
         } else if (currentProblemId === 'insurance') {
           const age = parseFloat(document.getElementById('num_age')?.value) || 35;
           const bmi = parseFloat(document.getElementById('num_bmi')?.value) || 28.5;
@@ -1932,11 +1992,17 @@
 
         const contribution = c.coef * featVal;
         pred += contribution;
-        breakdown.push(`${c.feature}: ${(contribution >= 0 ? '+' : '')}$${contribution.toFixed(0)}`);
+        const contribFormatted = currentProblemId === 'boston' ? `$${contribution.toFixed(2)}k` : `$${contribution.toFixed(0)}`;
+        breakdown.push(`${c.feature}: ${(contribution >= 0 ? '+' : '')}${contribFormatted}`);
       });
 
       const prefix = cfg.targetPrefix || '';
-      document.getElementById('predProfitOutput').textContent = `${prefix}${pred.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      const suffix = cfg.targetSuffix || '';
+      let displayPred = `${prefix}${pred.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}${suffix}`;
+      if (currentProblemId === 'boston') {
+        displayPred += ` <span style="font-size: 16px; font-weight: 500; color: #a7f3d0;">(約 $${(pred * 1000).toLocaleString('en-US', { maximumFractionDigits: 0 })})</span>`;
+      }
+      document.getElementById('predProfitOutput').innerHTML = displayPred;
       document.getElementById('predFormulaNote').innerHTML = `Active predictors: ${model.features.join(', ')}<br><span style="font-size: 11px; color: #cbd5e1;">(${breakdown.join(' | ')})</span>`;
     }
 
@@ -2172,6 +2238,11 @@
       // Presets
       document.getElementById('preset50Startups').addEventListener('click', () => {
         document.getElementById('modalInputUrl').value = 'https://raw.githubusercontent.com/Avik-Jain/100-Days-Of-ML-Code/master/datasets/50_Startups.csv';
+        document.getElementById('btnFetchUrl').click();
+      });
+
+      document.getElementById('presetBoston')?.addEventListener('click', () => {
+        document.getElementById('modalInputUrl').value = 'https://raw.githubusercontent.com/selva86/datasets/master/BostonHousing.csv';
         document.getElementById('btnFetchUrl').click();
       });
 
