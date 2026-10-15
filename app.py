@@ -6,6 +6,7 @@ app = Flask(__name__, static_folder=".", static_url_path="")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_DATA_PATH = os.path.join(BASE_DIR, "model_data.json")
+BOSTON_DATA_PATH = os.path.join(BASE_DIR, "boston_data.json")
 
 try:
     with open(MODEL_DATA_PATH, "r", encoding="utf-8") as f:
@@ -13,6 +14,13 @@ try:
 except Exception as e:
     print(f"Warning: Could not load model_data.json: {e}")
     MODEL_DATA = {}
+
+try:
+    with open(BOSTON_DATA_PATH, "r", encoding="utf-8") as f:
+        BOSTON_DATA = json.load(f)
+except Exception as e:
+    print(f"Warning: Could not load boston_data.json: {e}")
+    BOSTON_DATA = {}
 
 
 @app.route("/")
@@ -23,18 +31,20 @@ def index():
 
 @app.route("/api/models", methods=["GET"])
 def get_models():
-    """Return the complete 5-algorithm feature selection evaluation data."""
+    """Return the complete 5-algorithm feature selection evaluation data for startups or boston."""
+    problem = request.args.get("problem", "startups")
+    dataset = BOSTON_DATA if problem == "boston" else MODEL_DATA
     algo = request.args.get("algo")
-    if algo and algo in MODEL_DATA:
-        return jsonify({algo: MODEL_DATA[algo]})
-    return jsonify(MODEL_DATA)
+    if algo and algo in dataset:
+        return jsonify({algo: dataset[algo]})
+    return jsonify(dataset)
 
 
 @app.route("/api/predict", methods=["POST"])
 def predict():
     """
-    Live prediction endpoint: Calculates startup profit based on user inputs
-    and the selected algorithm/k-feature subset.
+    Live prediction endpoint: Calculates target prediction based on user inputs
+    and the selected algorithm/k-feature subset for either 50 Startups or Boston Housing.
     """
     try:
         data = request.get_json(force=True) or {}
@@ -42,18 +52,28 @@ def predict():
         algo = data.get("algo", "Lasso")
         k = int(data.get("k", 2))
 
-        if algo not in MODEL_DATA or k < 1 or k > len(MODEL_DATA[algo]):
+        dataset = BOSTON_DATA if problem == "boston" else MODEL_DATA
+
+        if algo not in dataset or k < 1 or k > len(dataset[algo]):
             return jsonify({"error": "Invalid algorithm or k parameter"}), 400
 
-        model_spec = MODEL_DATA[algo][k - 1]
+        model_spec = dataset[algo][k - 1]
         coefficients = model_spec["coefficients"]
 
-        if problem == "insurance":
-            age = float(data.get("age", 35))
-            bmi = float(data.get("bmi", 28.5))
-            children = float(data.get("children", 1))
-            smoker = data.get("smoker", "no")
-            region = data.get("region", "northeast")
+        if problem == "boston":
+            lstat = float(data.get("lstat", 12.5))
+            rm = float(data.get("rm", 6.2))
+            ptratio = float(data.get("ptratio", 18.0))
+            dis = float(data.get("dis", 3.8))
+            crim = float(data.get("crim", 0.25))
+
+            feat_map = {
+                "lstat": lstat,
+                "rm": rm,
+                "ptratio": ptratio,
+                "dis": dis,
+                "crim": crim
+            }
 
             pred = 0.0
             breakdown = []
@@ -63,32 +83,17 @@ def predict():
                 if "Intercept" in fn:
                     pred += coef
                     breakdown.append({"feature": "Intercept", "contribution": coef})
-                elif fn == "age":
-                    contrib = coef * age
+                elif fn in feat_map:
+                    contrib = coef * feat_map[fn]
                     pred += contrib
-                    breakdown.append({"feature": "Age", "contribution": contrib})
-                elif fn == "bmi":
-                    contrib = coef * bmi
-                    pred += contrib
-                    breakdown.append({"feature": "BMI", "contribution": contrib})
-                elif fn == "children":
-                    contrib = coef * children
-                    pred += contrib
-                    breakdown.append({"feature": "Children", "contribution": contrib})
-                elif fn == "smoker_yes":
-                    val = 1.0 if smoker == "yes" else 0.0
-                    contrib = coef * val
-                    pred += contrib
-                    breakdown.append({"feature": "Smoker", "contribution": contrib})
-                elif fn == "region_southeast":
-                    val = 1.0 if region == "southeast" else 0.0
-                    contrib = coef * val
-                    pred += contrib
-                    breakdown.append({"feature": "Region SE", "contribution": contrib})
+                    breakdown.append({"feature": fn, "contribution": round(contrib, 4)})
 
             return jsonify({
-                "problem": "insurance",
-                "predicted_charges": round(pred, 2),
+                "problem": "boston",
+                "algo": algo,
+                "k": k,
+                "predicted_medv": round(pred, 2),
+                "predicted_price_usd": round(pred * 1000, 2),
                 "breakdown": breakdown
             })
 
@@ -176,8 +181,10 @@ def predict():
 @app.route("/api/summary", methods=["GET"])
 def get_summary():
     """Return summary comparisons across models."""
+    problem = request.args.get("problem", "startups")
+    dataset = BOSTON_DATA if problem == "boston" else MODEL_DATA
     summary = {}
-    for algo, models in MODEL_DATA.items():
+    for algo, models in dataset.items():
         summary[algo] = [
             {
                 "k": m["k"],

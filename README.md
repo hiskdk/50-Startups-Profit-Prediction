@@ -7,7 +7,6 @@
 [![CRISP-DM Methodology](https://img.shields.io/badge/Methodology-CRISP--DM-indigo)](#-crisp-dm-六大階段完整分析)
 [![Vanilla JS](https://img.shields.io/badge/Frontend-Vanilla%20JS%20%7C%20Chart.js-emerald)](#)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)](#)
-[![Bonus](https://img.shields.io/badge/Bonus-All%203%20Points%20Achieved-amber)](#-作業加分項實作成果-bonus)
 
 ---
 
@@ -21,37 +20,32 @@
 
 ---
 
-## 🏆 作業加分項實作成果 (Bonus)
+## 📋 資料集與多主題回歸分析 (Datasets & Problems)
 
-本作業已完整實作老師所規範的兩大加分功能（**總計加 3 分滿分**）：
+系統支援下拉選單切換分析主題，並提供自訂資料集純前端矩陣回歸引擎：
 
-### 1. 【基本要求 + 加總分 1分】下拉式視窗呈現兩種 Problem
-在網頁頂端導覽列及控制區設有 **「選擇題目 (Topic)」下拉式選單**，提供完整題型切換：
-- **題目一【基本要求】：50 Startups 獲利回歸分析（CRISP-DM）**
-  - 資料集：50 家新創企業研發、行政、行銷開銷與所在地（50 筆）
-  - 目標變數：`Profit`（新創企業淨利，美元）
-  - 特徵變數：`R&D Spend`, `Marketing Spend`, `Administration`, `State_Florida`, `State_New York`
-  - 核心發現：確認 **$k=2$ 甜蜜點（`['R&D Spend', 'Marketing Spend']`）**，測試集 RMSE 降至最低 **$8,198.80**，而納入 5 變數時因雜訊導致 RMSE 暴增至 **$9,137.99**（過擬合斷崖）。
-- **題目二【加分資料集】：Boston Housing 房價預測（CRISP-DM Real Estate）**
-  - 資料集：波士頓 506 個城鎮區塊之社經環境與房價中位數（`BostonHousing.csv`，506 筆）
-  - 目標變數：`MEDV`（自住房屋中位價值，千美元 $1,000s）
-  - 候選特徵：`lstat`（社經地位偏低人口比例 %）、`rm`（每戶平均房間數）、`ptratio`（師生比）、`dis`（就業中心距離）、`crim`（人均犯罪率）
-  - 核心發現：確認 **$k=3$ 最佳甜蜜點（`['lstat', 'rm', 'ptratio']`）**，解釋高達 **71.92%** 的房價變異（$R^2 = 0.7192$，RMSE = **$5.32k**）。三個主導變數皆具極高統計顯著性（$p < 0.0001$）。
-- **題目三【進階擴充】：醫療保險費用預測（Medical Insurance Charges）**
-  - 保留 1,338 筆醫療資料供深度驗證吸菸與 BMI 之非線性主導效應。
+### 1. 50 Startups 獲利回歸分析（CRISP-DM）
+- **資料集**：50 家新創企業研發、行政、行銷開銷與所在地（`50_Startups.csv`，50 筆）
+- **目標變數**：`Profit`（新創企業淨利，美元）
+- **特徵變數**：`R&D Spend`, `Marketing Spend`, `Administration`, `State_Florida`, `State_New York`
+- **核心發現**：確認 **$k=2$ 最佳甜蜜點（`['R&D Spend', 'Marketing Spend']`）**，測試集 RMSE 降至最低 **$8,198.80**，而納入 5 變數時因非顯著雜訊干擾導致測試集 RMSE 劇烈跳升至 **$9,137.99**（過擬合現象）。
 
-切換下拉選單時，全站所有 KPI 指標卡、雙面板動態折線圖、Fitted 回歸方程式、參數估計統計表、即時活頁模擬滑桿、以及殘差診斷表將**即時無縫切換**！
+### 2. Boston Housing 房價預測（CRISP-DM Real Estate）
+- **資料集**：波士頓 506 個城鎮區塊之社經環境與房價中位數（`BostonHousing.csv`，506 筆）
+- **目標變數**：`MEDV`（自住房屋中位價值，千美元 $1,000s）
+- **候選特徵**：`lstat`（社經地位偏低人口比例 %）、`rm`（每戶平均房間數）、`ptratio`（師生比）、`dis`（就業中心距離）、`crim`（人均犯罪率）
+- **核心發現**：確認 **$k=3$ 最佳甜蜜點（`['lstat', 'rm', 'ptratio']`）**，解釋高達 **71.92%** 的房價變異（$R^2 = 0.7192$，RMSE = **$5.32k**）。三個主導變數皆具極高統計顯著性（$p < 0.0001$）。
 
-### 2. 【加總分 2分】可任意輸入自訂 Dataset
-提供強大的**純前端即時矩陣運算回歸分析引擎（`regression_engine.js`）**：
-- 支援直接輸入任何公開 CSV 檔案網址（內建快捷按鈕：50 Startups、**Boston Housing**、Insurance、Advertising）。
-- 支援本機檔案拖曳上傳（Local CSV Upload）。
-- 內建高精度**高斯-若爾當（Gauss-Jordan）消去法矩陣逆運算**，於瀏覽器端毫秒級完成：
-  - $\hat{\beta} = (X^T X)^{-1} X^T y$
-  - 標準誤 $SE(\beta_j)$、Student's $t$ 檢定值、$p$-Value、95% 信賴區間
-  - 變異數膨脹因子 VIF（多重共線性檢定）
-  - 前向逐步特徵選取（Forward Stepwise Selection）$k=1 \dots 5$
-  - 自動生成動態輸入滑桿與即時預測模擬器！
+### 3. 自訂資料集即時分析引擎（Custom Dataset Engine）
+- **純前端即時矩陣運算回歸分析引擎（`regression_engine.js`）**：
+  - 支援直接輸入任何公開 CSV 檔案網址（內建 50 Startups、Boston Housing 快捷按鈕）。
+  - 支援本機檔案拖曳上傳（Local CSV Upload）。
+  - 內建高精度**高斯-若爾當（Gauss-Jordan）消去法矩陣逆運算**，於瀏覽器端毫秒級完成：
+    - $\hat{\beta} = (X^T X)^{-1} X^T y$
+    - 標準誤 $SE(\beta_j)$、Student's $t$ 檢定值、$p$-Value、95% 信賴區間
+    - 變異數膨脹因子 VIF（多重共線性檢定）
+    - 前向逐步特徵選取（Forward Stepwise Selection）$k=1 \dots 5$
+    - 自動生成動態輸入滑桿與即時預測模擬器！
 
 ---
 
@@ -72,7 +66,7 @@
    - 僅使用研發支出（`R&D Spend`）與行銷支出（`Marketing Spend`），測試集 RMSE 達到全局最低點 **`$8,198.80`**，且 $R^2$ 達到峰值 **`0.9474`**。
    - 單一 `R&D Spend` 即主導了 94.6% 的利潤變異（$t = 16.85, p < 0.0001$）；輔以 `Marketing Spend`（$t = 1.86$）提供正向微幅提升。
 2. **5變數過擬合斷崖 ($k=5$, Overfitting Cliff)**：
-   - 當納入行政支出（`Administration`）與州別虛擬變數（`State_Florida`, `State_New York`）時，測試集 RMSE 從 **`$8,198.80`** 劇烈跳升至 **`$9,137.99`**（增加約 $939 美元誤差懲罰！）。
+   - 當納入行政支出（`Administration`）與州別虛擬變數（`State_Florida`, `State_New York`）時，測試集 RMSE 從 **`$8,198.80`** 劇烈跳升至 **`$9,137.99`**（增加約 $939 美元誤差懲罰）。
    - 行政支出與地點變數之 p 值皆大於 0.05（無法拒絕無效假說，不具統計顯著性），證實過多無關變數只會引入高維度雜訊並破壞泛化能力。
 3. **奧坎剃刀原則 (Occam's Razor)**：
    - 「若無必要，勿增實體」。在預測能力相同或更優的情況下，最簡約的模型（Parsimonious Model）更具魯棒性、可解釋性與經濟效益。
@@ -140,16 +134,16 @@ graph TD
 
 ---
 
-## 🚀 GitHub Pages 部署指南 (最後 1 步啟用)
+## 🚀 GitHub Pages 部署指南
 
-本專案已配置完成官方 GitHub Actions 工作流程檔案 [`.github/workflows/pages.yml`](file:///.github/workflows/pages.yml)。請按照以下步驟完成發布：
+本專案已配置完成官方 GitHub Actions 工作流程檔案 [`.github/workflows/pages.yml`](file:///.github/workflows/pages.yml)。
 
 ### 步驟 1：初始化 Git 並推送到您的 GitHub
 在專案根目錄開啟終端機（PowerShell 或 Bash）執行：
 ```bash
 git init
 git add .
-git commit -m "feat: complete multiple linear regression explorer with bonus features"
+git commit -m "feat: complete multiple linear regression explorer"
 git branch -M main
 git remote add origin https://github.com/<您的GitHub帳號>/<您的倉庫名稱>.git
 git push -u origin main
@@ -161,27 +155,22 @@ git push -u origin main
 2. 在 **Build and deployment** 區塊：
    - **方式一（官方推薦）：** 在 **Source** 下拉選單中選擇 **`GitHub Actions`**。系統將自動觸發剛才推送的 Actions 工作流程，約 30 秒內自動建置並發布上線！
    - **方式二（傳統分支）：** 在 **Source** 選擇 **`Deploy from a branch`**，Branch 選擇 **`main`**，資料夾選擇 **`/(root)`**，點擊 **Save**。
-3. 重新整理頁面，即可看到綠色打勾標記與公開網址：  
+3. 重新整理頁面，即可看到公開網址：  
    👉 **`https://<您的GitHub帳號>.github.io/<您的倉庫名稱>/`**
 
 ---
 
-## 💻 本機執行方式 (可選 Flask 模式)
+## 💻 本機執行方式
 
-如果您希望在本地端以 Python Flask 伺服器啟動：
+### 方式一：靜態網頁直接開啟
+直接以任何現代瀏覽器開啟 `index.html` 即可完整體驗所有模型計算、動態折線圖與預測功能（支援無伺服器環境運行）。
 
+### 方式二：Python Flask 伺服器
 1. **安裝依賴套件**：
    ```bash
    pip install -r requirements.txt
    ```
-
-2. **執行 Python 統計分析與圖表生成**：
-   ```bash
-   python main.py
-   python feature_progression_analysis.py
-   ```
-
-3. **啟動 Flask 網頁應用**：
+2. **啟動 Flask 網頁應用**：
    ```bash
    python app.py
    ```
@@ -193,10 +182,9 @@ git push -u origin main
 
 ```text
 ├── index.html                           # 核心前端單頁應用（含 StatsUnlock 美學與多題互動計算器）
-├── regression_engine.js                 # 純前端高精度 OLS 矩陣逆運算與特徵選取引擎 (加分項 2)
-├── model_data.js / model_data.json      # 題目一 50 Startups 預先計算之模型統計資料 (基本要求)
-├── boston_data.js / boston_data.json    # 題目二 Boston Housing 預先計算之模型統計資料 (加分項 1)
-├── insurance_data.js                    # 擴充題 Medical Insurance 預先計算之模型統計資料
+├── regression_engine.js                 # 純前端高精度 OLS 矩陣逆運算與特徵選取引擎
+├── model_data.js / model_data.json      # 題目一 50 Startups 預先計算之模型統計資料
+├── boston_data.js / boston_data.json    # 題目二 Boston Housing 預先計算之模型統計資料
 ├── BostonHousing.csv                    # 本地 Boston Housing 原始資料集
 ├── 50_Startups.csv                      # 本地 50 Startups 原始資料集
 ├── app.py                               # Flask Web 應用與 REST API 伺服器 (可選)
@@ -220,6 +208,5 @@ git push -u origin main
 2. **Datasets**:  
    - Avik Jain (2018). *100 Days of ML Code - 50 Startups Dataset*.
    - Harrison, D. and Rubinfeld, D.L. (1978). *Hedonic prices and the demand for clean air*, J. Environ. Economics & Management, vol.5, 81-102 (Boston Housing Dataset).
-   - Brett Lantz (2019). *Machine Learning with R - Medical Cost Personal Datasets*.
 3. **Methodology**:  
    Wirth, R., & Hipp, J. (2000). *CRISP-DM: Towards a standard process model for data mining*. In Proceedings of the 4th International Conference on the Practical Applications of Knowledge Discovery and Data Mining.

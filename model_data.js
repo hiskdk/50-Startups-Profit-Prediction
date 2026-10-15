@@ -3713,5 +3713,5 @@ window.MODEL_DATA = {
 window.STARTUPS_DATA = window.MODEL_DATA;
 window.MODEL_DATA_SETS = {
   'startups': window.STARTUPS_DATA,
-  'insurance': typeof window.INSURANCE_DATA !== 'undefined' ? window.INSURANCE_DATA : null
+  'boston': typeof window.BOSTON_DATA !== 'undefined' ? window.BOSTON_DATA : null
 };
